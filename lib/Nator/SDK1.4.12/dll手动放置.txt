@@ -1,0 +1,2 @@
+1.将 SDK1.4.12\32\NTControl.dll 复制到 C:\Windows\SysWOW64
+2.将 SDK1.4.12\64\NTControl.dll 复制到 C:\Windows\System32
