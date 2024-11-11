@@ -8,7 +8,9 @@ set(CMAKE_C_STANDARD_REQUIRED True)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-add_library(RMDMotor RMDMotor.cpp)
 add_library(SerialPort SerialPort.cpp)
+target_include_directories(SerialPort PUBLIC "../../include")
+
+add_library(RMDMotor RMDMotor.cpp)
 target_link_libraries(RMDMotor SerialPort)
 target_include_directories(RMDMotor PUBLIC "../../include")

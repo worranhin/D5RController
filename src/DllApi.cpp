@@ -1,22 +1,47 @@
 #include "DllApi.h"
 
-D5Robot *CreateD5RobotInstance(const char *serialPort, std::string natorID,
-                               uint8_t topRMDID, uint8_t botRMDID) {
-  return new D5Robot(serialPort, natorID, topRMDID, botRMDID);
+ErrorCode CreateD5RobotInstance(D5Robot *instance, const char *serialPort,
+                                std::string natorID, uint8_t topRMDID,
+                                uint8_t botRMDID) {
+
+  try {
+    instance = new D5Robot(serialPort, natorID, topRMDID, botRMDID);
+    return ErrorCode::OK;
+  } catch (ErrorCode &e) {
+    return e;
+  } catch (...) {
+    return ErrorCode::CreateInstanceError;
+  }
 }
 
-void DestroyD5RobotInstance(D5Robot *instance) { delete instance; }
+ErrorCode DestroyD5RobotInstance(D5Robot *instance) {
+  try {
+    delete instance;
+    return ErrorCode::OK;
+  } catch (const std::exception &e) {
+    // std::cerr << e.what() << '\n';
+    return ErrorCode::SystemError;
+  }
+}
 
 bool CallIsInit(D5Robot *instance) { return instance->IsInit(); }
 
-bool CallSetZero(D5Robot *instance) { return instance->SetZero(); }
-
-bool CallStop(D5Robot *instance) { return instance->Stop(); }
-
-bool CallJointsMoveAbsolute(D5Robot *instance, const Joints j) {
-  return instance->JointsMoveAbsolute(j);
+ErrorCode CallSetZero(D5Robot *instance) {
+  instance->SetZero();
+  return ErrorCode::OK;
 }
 
-bool CallJointsMoveRelative(D5Robot *instance, const Joints j) {
-  return instance->JointsMoveRelative(j);
+ErrorCode CallStop(D5Robot *instance) {
+  instance->Stop();
+  return ErrorCode::OK;
+}
+
+ErrorCode CallJointsMoveAbsolute(D5Robot *instance, const Joints j) {
+  instance->JointsMoveAbsolute(j);
+  return ErrorCode::OK;
+}
+
+ErrorCode CallJointsMoveRelative(D5Robot *instance, const Joints j) {
+  instance->JointsMoveRelative(j);
+  return ErrorCode::OK;
 }
