@@ -8,6 +8,7 @@ enum ErrorCode {
   CreateInstanceError = 101,
   SerialError = 200,
   SerialInitError = 201,
+  SerialCloseError = 202,
   NatorError = 300,
   RMDError = 400
 };
