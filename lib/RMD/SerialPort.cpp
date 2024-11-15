@@ -1,4 +1,7 @@
 #include "SerialPort.h"
+#include "ErrorCode.h"
+#include "RobotException.hpp"
+#include <iostream>
 #include <stdexcept>
 
 namespace D5R {
@@ -6,13 +9,14 @@ SerialPort::SerialPort(const char *serialPort) {
   _handle = CreateFile(serialPort, GENERIC_READ | GENERIC_WRITE, 0, 0,
                        OPEN_EXISTING, 0, 0);
   if (_handle == INVALID_HANDLE_VALUE) {
-    throw std::runtime_error(std::string("Failed to open serial port"));
+    throw RobotException(ErrorCode::SerialInitError);
+    return;
   }
 
   BOOL bSuccess = SetupComm(_handle, 100, 100);
   if (!bSuccess) {
-    // ERROR_("Failed to init serial device buffer");
-    throw "Failed to init serial device buffer";
+    throw RobotException(ErrorCode::SerialInitError);
+    return;
   }
 
   COMMTIMEOUTS commTimeouts = {0};
@@ -24,23 +28,23 @@ SerialPort::SerialPort(const char *serialPort) {
 
   bSuccess = SetCommTimeouts(_handle, &commTimeouts);
   if (!bSuccess) {
-    // ERROR_("Failed to config Timeouts value");
-    throw "Failed to config Timeouts value";
+    throw RobotException(ErrorCode::SerialInitError);
+    return;
   }
 
   DCB dcbSerialParams = {0};
   dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
   if (!GetCommState(_handle, &dcbSerialParams)) {
-    // ERROR_("Failed to obtain device comm status");
-    throw "Failed to obtain device comm status";
+    throw RobotException(ErrorCode::SerialInitError);
+    return;
   }
   dcbSerialParams.BaudRate = CBR_115200;
   dcbSerialParams.ByteSize = 8;
   dcbSerialParams.StopBits = ONESTOPBIT;
   dcbSerialParams.Parity = NOPARITY;
   if (!SetCommState(_handle, &dcbSerialParams)) {
-    // ERROR_("Failed to config DCB");
-    throw "Failed to config DCB";
+    throw RobotException(ErrorCode::SerialInitError);
+    return;
   }
 }
 

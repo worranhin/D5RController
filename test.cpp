@@ -1,30 +1,53 @@
 #include "D5Robot.h"
+#include "DllApi.h"
 #include "KineHelper.hpp"
+#include "RobotException.hpp"
+
+D5R::D5Robot *pRobot;
+const std::string port = "\\\\.\\COM14";
+const std::string natorID = "usb:id:7547982319";
 
 int TestMoving();
 void TestKineHelper();
+void TestApi();
+
 int main() {
-  TestKineHelper();
+  // TestMoving();
+  // TestApi();
+  // TestKineHelper();
+
   return 0;
 }
 
 int TestMoving() {
-  std::string port = "\\\\.\\COM14";
-  std::string natorID = "usb:id:7547982319";
-  D5R::D5Robot robot(port.c_str(), natorID, D5R::ID_01, D5R::ID_02);
-  if (!robot.IsInit())
-  {
-    ERROR_("Failed to init robot!");
-    return -1;
+  // ***** Test Init ***** //
+  try {
+    D5R::D5Robot robot(port.c_str(), natorID, 1, 2);
+    D5R::Joints ja = {0, -13000000, 0, 0, 0};
+    D5R::Joints jr = {200, 1000000, 0, 0, 6000};
+    robot.JointsMoveAbsolute(ja);
+    // robot.JointsMoveRelative(jr);
+    // robot.Stop();
+  } catch (const D5R::RobotException &e) {
+    std::cout << e.what() << std::endl;
+  } catch (const std::exception &e) {
+    std::cout << e.what() << std::endl;
   }
 
-  D5R::Joints ja = {0, -13000000, 0, 0, -6000};
-  D5R::Joints jr = {1000, -5000000, -5000000, -5000000, 1000};
-  robot.JointsMoveAbsolute(ja);
-  robot.JointsMoveRelative(jr);
-  robot.Stop();
-
   return 0;
+}
+
+void TestApi() {
+  D5R::ErrorCode ec;
+  ec = CreateD5RobotInstance(pRobot, port.c_str(), natorID.c_str(), 1, 2);
+  std::cout << ec << std::endl;
+  // pRobot = CreateD5RobotInstance2(port.c_str(), natorID.c_str(), 1, 2);
+  // CallJointsMoveAbsolute(pRobot, {0, -13000000, 0, 0, 0});
+  ec = CallJointsMoveRelative(pRobot, {-1000, 1000000, 2000000, 3000000, 1000});
+  std::cout << ec << std::endl;
+  // Sleep(1000);
+  ec = DestroyD5RobotInstance(pRobot);
+  std::cout << ec << std::endl;
 }
 
 void TestKineHelper() {

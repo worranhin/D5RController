@@ -11,6 +11,7 @@
  */
 #include "RMDMotor.h"
 #include "LogUtil.h"
+#include "RobotException.hpp"
 
 namespace D5R {
 
@@ -44,18 +45,17 @@ RMDMotor::RMDMotor(const char *serialPort, uint8_t id)
  * should ensure that the serial port is valid and the handle is a valid
  * handle to the serial port.
  */
-RMDMotor::RMDMotor(HANDLE comHandle, uint8_t id)
-    : _handle(comHandle), _id(id) {
-      GetPI();
-      _isInit = true;
-    }
+RMDMotor::RMDMotor(HANDLE comHandle, uint8_t id) : _handle(comHandle), _id(id) {
+  GetPI();
+  _isInit = true;
+}
 
 /**
  * Destructor of RMDMotor object.
  *
  * The destructor will close the handle of the serial port.
  */
-RMDMotor::~RMDMotor() { CloseHandle(_handle); }
+RMDMotor::~RMDMotor() {}
 
 // 句柄初始化-----------------------------------------
 bool RMDMotor::Init() {
@@ -273,22 +273,26 @@ bool RMDMotor::GetPI() {
 
   if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
     ERROR_("GetPI: Failed to send command to device");
+    throw RobotException(ErrorCode::SerialSendError);
     return false;
   }
 
   if (!ReadFile(_handle, readBuf, bytesToRead, &_bytesRead, NULL)) {
     ERROR_("GetPI: Failed to revice data from device");
+    throw RobotException(ErrorCode::SerialReceiveError);
     return false;
   }
 
   if (_bytesRead != bytesToRead) {
     ERROR_("GetPI: Abnormal received data - byte count");
+    throw RobotException(ErrorCode::RMDGetPIError);
     return false;
   }
 
   if (readBuf[0] != 0x3E || readBuf[1] != 0x30 || readBuf[2] != _id ||
       readBuf[3] != 0x06 || readBuf[4] != (0x3E + 0x30 + _id + 0x06)) {
     ERROR_("GetPI: Abnormal received data - frame header");
+    throw RobotException(ErrorCode::RMDGetPIError);
     return false;
   }
 
@@ -298,6 +302,7 @@ bool RMDMotor::GetPI() {
   }
   if (sum != readBuf[11]) {
     ERROR_("GetPI: Abnormal received data - data");
+    throw RobotException(ErrorCode::RMDGetPIError);
     return false;
   }
 
