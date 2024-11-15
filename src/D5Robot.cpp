@@ -9,7 +9,9 @@ D5Robot::D5Robot(const char *serialPort, std::string natorID, uint8_t topRMDID,
       _botRMDMotor(_port.GetHandle(), botRMDID) {
   _isInit =
       _NatorMotor.IsInit() && _topRMDMotor.isInit() && _botRMDMotor.isInit();
-      
+      if(!_isInit) {
+        throw RobotException(ErrorCode::CreateInstanceError);
+      }
 }
 D5Robot::~D5Robot() {}
 

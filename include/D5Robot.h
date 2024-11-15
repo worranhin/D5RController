@@ -3,6 +3,7 @@
 #include "NatorMotor.h"
 #include "RMDMotor.h"
 #include "SerialPort.h"
+#include "RobotException.hpp"
 
 #ifdef D5R_EXPORTS
 #define D5R_API __declspec(dllexport)

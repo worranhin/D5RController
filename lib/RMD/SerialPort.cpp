@@ -48,11 +48,7 @@ SerialPort::SerialPort(const char *serialPort) {
   }
 }
 
-SerialPort::~SerialPort() {
-  if (!CloseHandle(_handle)) {
-    throw RobotException(ErrorCode::SerialCloseError);
-  }
-}
+SerialPort::~SerialPort() { CloseHandle(_handle); }
 
 HANDLE SerialPort::GetHandle() { return _handle; }
 

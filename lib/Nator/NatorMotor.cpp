@@ -9,13 +9,17 @@
  *
  */
 #include "NatorMotor.h"
+#include "RobotException.hpp"
 namespace D5R {
 // 构造析构---------------------------------------
 NatorMotor::NatorMotor(std::string id) : _id(id) { 
   _isInit = Init();
   if(!_isInit)
+  {
     std::cerr << "Failed to init NatorMotor" << std::endl;
+    throw RobotException(ErrorCode::NatorInitError);
   }
+}
 NatorMotor::~NatorMotor() { NT_CloseSystem(_handle); }
 
 // 初始化------------------------------------------

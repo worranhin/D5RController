@@ -9,15 +9,33 @@
     return ErrorCode::SystemError;                                             \
   }
 
-ErrorCode CreateD5RobotInstance(D5Robot *instance, const char *serialPort,
-                                std::string natorID, uint8_t topRMDID,
+ErrorCode CreateD5RobotInstance(D5Robot *&instance, const char *serialPort,
+                                const char *natorID, uint8_t topRMDID,
                                 uint8_t bottomRMDID) {
-  TRY_BLOCK(instance =
-                new D5Robot(serialPort, natorID, topRMDID, bottomRMDID););
+  try {
+    instance = new D5Robot(serialPort, natorID, topRMDID, bottomRMDID);
+    return ErrorCode::OK;
+  } catch (const RobotException &e) {
+    return e.code;
+  } catch (...) {
+    return ErrorCode::CreateInstanceError;
+  }
 }
 
 ErrorCode DestroyD5RobotInstance(D5Robot *instance) {
-  TRY_BLOCK(delete instance;)
+  // delete instance;
+  // return ErrorCode::OK;
+  // TRY_BLOCK(delete instance;)
+  if (instance == nullptr)
+    return ErrorCode::DestroyInstanceError_nullptr;
+  try {
+    delete instance;
+    return ErrorCode::OK;
+  } catch (const RobotException &e) {
+    return e.code;
+  } catch (...) {
+    return ErrorCode::CreateInstanceError;
+  }
 }
 
 bool CallIsInit(D5Robot *instance) { return instance->IsInit(); }
