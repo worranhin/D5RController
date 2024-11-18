@@ -147,7 +147,7 @@ double CameraUP::GetMapParam() { return _mapParam; }
  * @return std::vector<std::vector<float>> 返回参数列表： {{jaw.center.x,
  * jaw.center.y, jaw_angle}, {clamp.center.x, clamp.center.y, clamp_angle}}
  */
-std::vector<std::vector<float>> CameraUP::GetPos() {
+std::vector<std::vector<float>> CameraUP::GetPixelPos() {
   std::vector<std::vector<float>> pos;
   if (_jaw.img.empty()) {
     std::cerr << "Please run GetJawModel fun first" << std::endl;
@@ -182,6 +182,22 @@ std::vector<std::vector<float>> CameraUP::GetPos() {
   cv::resizeWindow(windowname, cv::Size(1295, 1024));
   cv::imshow(windowname, img);
   return pos;
+}
+
+/**
+ * @brief 返回物理坐标系下的位置信息
+ *
+ * @return std::vector<std::vector<double>> 返回参数列表：
+ * {{jaw.center.x, jaw.center.y, jaw_angle}, {clamp.center.x, clamp.center.y,
+ * clamp_angle}}
+ */
+std::vector<std::vector<double>> CameraUP::GetPhysicPos() {
+  auto pixelPos = GetPixelPos();
+  std::vector<std::vector<double>> physicPos;
+  for (auto &p : pixelPos) {
+    physicPos.push_back({p[0] * _mapParam, p[1] * _mapParam, p[2]});
+  }
+  return physicPos;
 }
 
 } // namespace D5R
