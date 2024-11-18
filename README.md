@@ -1,8 +1,10 @@
-# DOF5RobotControl
+# D5RC
 
 > 该库为 [RMDControl](https://github.com/worranhin/RMDControl) 的面向对象形式
 
-这是用于控制五自由度机器人的 C/C++ 库代码。
+这是用于控制五自由度机器人的船新 C/C++ 库代码。
+
+本仓库是[该仓库](https://github.com/worranhin/DOF5RobotControl)的类实现版本。
 
 ## 使用
 
