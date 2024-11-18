@@ -20,7 +20,6 @@ int main() {
 }
 
 int TestMoving() {
-  // ***** Test Init ***** //
   try {
     D5R::D5Robot robot(port.c_str(), natorID, 1, 2);
     D5R::Joints ja = {0, -13000000, 0, 0, 0};
@@ -41,7 +40,6 @@ void TestApi() {
   D5R::ErrorCode ec;
   ec = CreateD5RobotInstance(pRobot, port.c_str(), natorID.c_str(), 1, 2);
   std::cout << ec << std::endl;
-  // pRobot = CreateD5RobotInstance2(port.c_str(), natorID.c_str(), 1, 2);
   // CallJointsMoveAbsolute(pRobot, {0, -13000000, 0, 0, 0});
   ec = CallJointsMoveRelative(pRobot, {-1000, 1000000, 2000000, 3000000, 1000});
   std::cout << ec << std::endl;
