@@ -6,12 +6,6 @@
 #include "RobotException.hpp"
 #include "SerialPort.h"
 
-#ifdef D5R_EXPORTS
-#define D5R_API __declspec(dllexport)
-#else
-#define D5R_API __declspec(dllimport)
-#endif
-
 namespace D5R {
 
 struct Joints {
@@ -29,8 +23,21 @@ struct Points {
   double rz;
 };
 
-class D5R_API D5Robot {
+struct Pose {
+  double px;
+  double py;
+  double pz;
+  double ry;
+  double rz;
+};
+
+class D5Robot {
 public:
+  NatorMotor natorMotor;
+  RMDMotor topRMDMotor;
+  RMDMotor botRMDMotor;
+  CameraUP upCamera;
+
   D5Robot(const char *serialPort, std::string natorID, uint8_t topRMDID,
           uint8_t botRMDID, std::string_view upCameraID);
   ~D5Robot();
@@ -39,14 +46,12 @@ public:
   bool Stop();
   bool JointsMoveAbsolute(const Joints j);
   bool JointsMoveRelative(const Joints j);
+
+  Joints GetCurrentJoint();
+  Pose GetCurrentPose();  // TODO: implement
   Points FwKine(const Joints j);
   Joints InvKine(const Points p);
-
-  NatorMotor NatorMotor;
-  RMDMotor topRMDMotor;
-  RMDMotor botRMDMotor;
-  CameraUP upCamera;
-
+  
 private:
   SerialPort _port;
   bool _isInit;

@@ -3,7 +3,7 @@
 namespace D5R {
 D5Robot::D5Robot(const char *serialPort, std::string natorID, uint8_t topRMDID,
                  uint8_t botRMDID, std::string_view upCameraID)
-    : _port(serialPort), NatorMotor(natorID),
+    : _port(serialPort), natorMotor(natorID),
       topRMDMotor(_port.GetHandle(), topRMDID),
       botRMDMotor(_port.GetHandle(), botRMDID), upCamera(upCameraID) {
   _isInit = NatorMotor.IsInit() && topRMDMotor.isInit() &&
@@ -17,7 +17,7 @@ D5Robot::~D5Robot() {}
 bool D5Robot::IsInit() { return _isInit; }
 
 bool D5Robot::SetZero() {
-  if (!NatorMotor.SetZero()) {
+  if (!natorMotor.SetZero()) {
     ERROR_("Failed to set nator motor zero");
     return false;
   }
@@ -32,7 +32,7 @@ bool D5Robot::SetZero() {
   return true;
 }
 bool D5Robot::Stop() {
-  if (!NatorMotor.Stop()) {
+  if (!natorMotor.Stop()) {
     ERROR_("Failed to stop nator motor");
     return false;
   }
@@ -49,7 +49,7 @@ bool D5Robot::Stop() {
 
 bool D5Robot::JointsMoveAbsolute(const Joints j) {
   NTU_Point p{j.p2, j.p3, j.p4};
-  if (!NatorMotor.GoToPoint_A(p)) {
+  if (!natorMotor.GoToPoint_A(p)) {
     ERROR_("Failed to move nator motor");
     return false;
   }
@@ -65,7 +65,7 @@ bool D5Robot::JointsMoveAbsolute(const Joints j) {
 }
 bool D5Robot::JointsMoveRelative(const Joints j) {
   NTU_Point p{j.p2, j.p3, j.p4};
-  if (!NatorMotor.GoToPoint_R(p)) {
+  if (!natorMotor.GoToPoint_R(p)) {
     ERROR_("Failed to move nator motor");
     return false;
   }
@@ -78,6 +78,26 @@ bool D5Robot::JointsMoveRelative(const Joints j) {
     return false;
   }
   return true;
+}
+
+Joints D5Robot::GetCurrentJoint() {
+  Joints j;
+
+  j.r1 = topRMDMotor.GetSingleAngle_s();
+  j.r5 = botRMDMotor.GetSingleAngle_s();
+
+  NTU_Point np;
+  this->natorMotor.GetPosition(&np);
+  j.x = np.x;
+  j.y = np.y;
+  j.z = np.z;
+
+  return j;
+}
+  
+Pose D5Robot::GetCurrentPose() {
+  throw std::logic_error("Not implemented");
+  //  return Pose();
 }
 
 Points D5Robot::FwKine(const Joints j) {
