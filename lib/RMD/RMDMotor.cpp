@@ -277,6 +277,113 @@ bool RMDMotor::GoAngleRelative(int64_t angle) {
   return true;
 }
 
+/**
+ * @brief 开环控制
+ *
+ * This function sends a command to the motor to set its power level for open
+ * loop control. It communicates with the motor via a serial interface, sending
+ * a command packet and waiting for a response. The function checks for
+ * communication errors and validates the response format and checksum.
+ *
+ * @param power 开环输出功率，数值范围 [-1000, 1000]
+ *
+ * @return The actual speed of the motor as reported by the motor in response,
+ * represented as a 16-bit integer.
+ *
+ * @throw RobotException if there is an error in communication or if the
+ * received data is malformed or fails checksum verification.
+ */
+int16_t RMDMotor::OpenLoopControl(int16_t power) {
+  uint8_t command[8];
+  command[0] = 0x3E;
+  command[1] = 0xA0;
+  command[2] = _id;
+  command[3] = 0x02;
+  command[4] = _checksum(command, 0, 4);
+  command[5] = *(uint8_t *)(&power);
+  command[6] = *((uint8_t *)(&power) + 1);
+  command[7] = _checksum(command, 5, 7);
+
+  const DWORD bytesToRead = 13;
+  uint8_t readBuf[bytesToRead];
+
+  if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
+    throw RobotException(ErrorCode::SerialSendError);
+  }
+
+  if (!ReadFile(_handle, readBuf, bytesToRead, &_bytesRead, NULL)) {
+    throw RobotException(ErrorCode::SerialReceiveError);
+  }
+
+  // check received length
+  if (_bytesRead != bytesToRead) {
+    throw RobotException(ErrorCode::SerialReceiveError_LessThanExpected);
+  }
+
+  // check received format
+  if (readBuf[0] != 0x3E || readBuf[1] != 0xA0 || readBuf[2] != _id ||
+      readBuf[3] != 0x07 || readBuf[4] != _checksum(readBuf, 0, 4)) {
+    throw RobotException(ErrorCode::RMDFormatError);
+  }
+
+  // check data sum
+  if (_checksum(readBuf, 5, 12) != readBuf[12]) {
+    throw RobotException(ErrorCode::RMDChecksumError);
+  }
+
+  int16_t speed = 0;
+  *(uint8_t *)(&speed) = readBuf[8];
+  *((uint8_t *)(&speed) + 1) = readBuf[9];
+
+  return speed;
+}
+
+/**
+ * @brief 速度控制
+ * @param speed 电机速度，单位是 0.01 dps/LSB
+ * @throw RobotException if the operation fails
+ */
+void RMDMotor::SpeedControl(int32_t speed) {
+  uint8_t command[10];
+  command[0] = 0x3E;
+  command[1] = 0xA2;
+  command[2] = _id;
+  command[3] = 0x04;
+  command[4] = _checksum(command, 0, 4);
+  command[5] = *(uint8_t *)(&speed);
+  command[6] = *((uint8_t *)(&speed) + 1);
+  command[7] = *((uint8_t *)(&speed) + 2);
+  command[8] = *((uint8_t *)(&speed) + 3);
+  command[9] = _checksum(command, 5, 9);
+
+  const DWORD bytesToRead = 13;
+  uint8_t readBuf[bytesToRead];
+
+  if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
+    throw RobotException(ErrorCode::SerialSendError);
+  }
+
+  if (!ReadFile(_handle, readBuf, bytesToRead, &_bytesRead, NULL)) {
+    throw RobotException(ErrorCode::SerialReceiveError);
+  }
+
+  // check received length
+  if (_bytesRead != bytesToRead) {
+    throw RobotException(ErrorCode::SerialReceiveError_LessThanExpected);
+  }
+
+  // check received format
+  if (readBuf[0] != 0x3E || readBuf[1] != 0xA2 || readBuf[2] != _id ||
+      readBuf[3] != 0x07 || readBuf[4] != _checksum(readBuf, 0, 4)) {
+    throw RobotException(ErrorCode::RMDFormatError);
+  }
+
+  // check data sum
+  if (_checksum(readBuf, 5, 12) != readBuf[12]) {
+    throw RobotException(ErrorCode::RMDChecksumError);
+  }
+}
+
 // 急停----------------------------------------------
 bool RMDMotor::Stop() {
   uint8_t command[] = {0x3E, 0x81, 0x00, 0x00, 0x00};
