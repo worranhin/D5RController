@@ -18,7 +18,8 @@ public:
   void GetJawModel(cv::Mat img, std::vector<cv::Point2f> &pst);
   void SIFT(cv::Mat img, ModelType modelname, std::vector<cv::Point2f> &pst);
   double GetMapParam();
-  std::vector<std::vector<float>> GetPos();
+  std::vector<std::vector<float>> GetPixelPos();
+  std::vector<std::vector<double>> GetPhysicPos();
 
 private:
   Model _jaw;
