@@ -20,6 +20,7 @@ public:
   double GetMapParam();
   std::vector<std::vector<float>> GetPixelPos();
   std::vector<std::vector<double>> GetPhysicPos();
+  std::vector<double> GetPhysicError();
 
 private:
   Model _jaw;

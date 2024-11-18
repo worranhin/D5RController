@@ -200,4 +200,20 @@ std::vector<std::vector<double>> CameraUP::GetPhysicPos() {
   return physicPos;
 }
 
+/**
+ * @brief 计算夹钳和钳口在物理坐标系下的位置差
+ *
+ * @return std::vector<double> 返回参数列表：
+ * {jaw.center.x - clamp.center.x, jaw.center.y - clamp.center.y, jaw_angle -
+ * clamp_angle}
+ */
+std::vector<double> CameraUP::GetPhysicError() {
+  auto pixelPos = GetPixelPos();
+  std::vector<double> posError;
+  posError.push_back((pixelPos[0][0] - pixelPos[1][0]) * _mapParam);
+  posError.push_back((pixelPos[0][1] - pixelPos[1][1]) * _mapParam);
+  posError.push_back(pixelPos[0][2] - pixelPos[1][2]);
+  return posError;
+}
+
 } // namespace D5R
