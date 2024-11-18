@@ -19,6 +19,7 @@ target_link_libraries(Galaxy GalaxySDK)
 target_include_directories(Galaxy PUBLIC "../../include")
 
 list(APPEND CMAKE_PREFIX_PATH "../OpenCV_4_10/x64/mingw/bin")
+set(OpenCV_DIR "../OpenCV_4_10")
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIR})
 
