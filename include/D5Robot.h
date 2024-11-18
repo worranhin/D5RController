@@ -21,8 +21,20 @@ struct Joints {
   int r5;
 };
 
+struct Pose {
+  double px;
+  double py;
+  double pz;
+  double ry;
+  double rz;
+};
+
 class D5R_API D5Robot {
 public:
+  NatorMotor natorMotor;
+  RMDMotor topRMDMotor;
+  RMDMotor botRMDMotor;
+
   D5Robot(const char *serialPort, std::string natorID, uint8_t topRMDID,
           uint8_t botRMDID);
   ~D5Robot();
@@ -31,12 +43,11 @@ public:
   bool Stop();
   bool JointsMoveAbsolute(const Joints j);
   bool JointsMoveRelative(const Joints j);
+  Joints GetCurrentJoint();
+  Pose GetCurrentPose();
 
 private:
   SerialPort _port;
-  NatorMotor _NatorMotor;
-  RMDMotor _topRMDMotor;
-  RMDMotor _botRMDMotor;
   bool _isInit;
 };
 } // namespace D5R
