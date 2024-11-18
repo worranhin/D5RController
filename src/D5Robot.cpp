@@ -2,11 +2,12 @@
 
 namespace D5R {
 D5Robot::D5Robot(const char *serialPort, std::string natorID, uint8_t topRMDID,
-                 uint8_t botRMDID)
+                 uint8_t botRMDID, std::string_view upCameraID)
     : _port(serialPort), natorMotor(natorID),
       topRMDMotor(_port.GetHandle(), topRMDID),
-      botRMDMotor(_port.GetHandle(), botRMDID) {
-  _isInit = natorMotor.IsInit() && topRMDMotor.isInit() && botRMDMotor.isInit();
+      botRMDMotor(_port.GetHandle(), botRMDID), upCamera(upCameraID) {
+  _isInit = natorMotor.IsInit() && topRMDMotor.isInit() &&
+            botRMDMotor.isInit() && upCamera.IsInit();
   if (!_isInit) {
     throw RobotException(ErrorCode::CreateInstanceError);
   }
@@ -47,7 +48,7 @@ bool D5Robot::Stop() {
 }
 
 bool D5Robot::JointsMoveAbsolute(const Joints j) {
-  NTU_Point p{j.x, j.y, j.z};
+  NTU_Point p{j.p2, j.p3, j.p4};
   if (!natorMotor.GoToPoint_A(p)) {
     ERROR_("Failed to move nator motor");
     return false;
@@ -63,7 +64,7 @@ bool D5Robot::JointsMoveAbsolute(const Joints j) {
   return true;
 }
 bool D5Robot::JointsMoveRelative(const Joints j) {
-  NTU_Point p{j.x, j.y, j.z};
+  NTU_Point p{j.p2, j.p3, j.p4};
   if (!natorMotor.GoToPoint_R(p)) {
     ERROR_("Failed to move nator motor");
     return false;
@@ -87,15 +88,40 @@ Joints D5Robot::GetCurrentJoint() {
 
   NTU_Point np;
   this->natorMotor.GetPosition(&np);
-  j.x = np.x;
-  j.y = np.y;
-  j.z = np.z;
+  j.p2 = np.x;
+  j.p3 = np.y;
+  j.p4 = np.z;
 
   return j;
 }
+  
 Pose D5Robot::GetCurrentPose() {
   throw std::logic_error("Not implemented");
   //  return Pose();
+}
+
+Points D5Robot::FwKine(const Joints j) {
+  double l[5]{38, 11.5, 17.25, 28, 18.1};
+  Points p{};
+  p.px = (l[2] + l[4]) * sin(j.r1 * M_PI / 180.0) +
+         j.p3 * cos(j.r1 * M_PI / 180.0) + j.p2 * sin(j.r1 * M_PI / 180.0);
+  p.py = -(l[2] + l[4]) * cos(j.r1 * M_PI / 180.0) +
+         j.p3 * sin(j.r1 * M_PI / 180.0) - j.p2 * cos(j.r1 * M_PI / 180.0);
+  p.pz = -j.p4 - (l[0] + l[1] + l[3]);
+  p.ry = j.r1;
+  p.rz = j.r5;
+  return p;
+}
+
+Joints D5Robot::InvKine(const Points p) {
+  Joints j{};
+  j.r1 = p.ry;
+  j.r5 = p.rz;
+  j.p2 =
+      p.px * sin(j.r1 * M_PI / 180.0) - p.py * cos(j.r1 * M_PI / 180.0) - 35.35;
+  j.p3 = p.px * cos(j.r1 * M_PI / 180.0) + p.py * sin(j.r1 * M_PI / 180.0);
+  j.p4 = -p.pz - 77.5;
+  return j;
 }
 
 } // namespace D5R
