@@ -171,6 +171,45 @@ bool RMDMotor::GetMultiAngle_s(int64_t *angle) {
   return true;
 }
 
+uint16_t RMDMotor::GetSingleAngle_s() {
+  uint8_t command[5] = {0x3E, 0x94, 0x00, 0x00, 0x00};
+  command[2] = _id;
+  command[4] = GetHeaderCheckSum(command);
+
+  const DWORD bytesToRead = 8;
+  uint8_t readBuf[bytesToRead];
+
+  if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
+    throw RobotException(ErrorCode::SerialSendError);
+  }
+
+  if (!ReadFile(_handle, readBuf, bytesToRead, &_bytesRead, NULL)) {
+    throw RobotException(ErrorCode::SerialReceiveError);
+  }
+
+  // check received length
+  if (_bytesRead != bytesToRead) {
+    throw RobotException(ErrorCode::SerialReceiveError_LessThanExpected);
+  }
+
+  // check received format
+  if (readBuf[0] != 0x3E || readBuf[1] != 0x94 || readBuf[2] != _id ||
+      readBuf[3] != 0x02 || readBuf[4] != _checksum(readBuf, 0, 4)) {
+    throw RobotException(ErrorCode::RMDFormatError);
+  }
+
+  // check data sum
+  if (_checksum(readBuf, 5, 7) != readBuf[7]) {
+    throw RobotException(ErrorCode::RMDChecksumError);
+  }
+
+  uint16_t circleAngle = 0;
+  *(uint8_t *)(&circleAngle) = readBuf[5];
+  *((uint8_t *)(&circleAngle) + 1) = readBuf[6];
+
+  return circleAngle;
+}
+
 // 帧头计算------------------------------------------
 uint8_t RMDMotor::GetHeaderCheckSum(uint8_t *command) {
   uint8_t sum = 0x00;
@@ -359,6 +398,22 @@ bool RMDMotor::DebugAnglePI(const uint8_t *arrPI) {
     ERROR_("Failed to updata PI param");
   }
   return true;
+}
+
+/**
+ * \brief Calculate checksum of a given array segment
+ * \param nums The array to calculate checksum
+ * \param start The start index of the segment to calculate checksum (include)
+ * \param end The end index of the segment to calculate checksum (not include)
+ * \return The checksum of the given array segment
+ */
+uint8_t RMDMotor::_checksum(uint8_t nums[], int start, int end) {
+  uint8_t sum = 0;
+  for (int i = start; i < end; i++) {
+    sum += nums[i];
+  }
+
+  return sum;
 }
 
 } // namespace D5R

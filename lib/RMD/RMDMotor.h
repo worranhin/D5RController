@@ -39,6 +39,7 @@ public:
   bool isInit();
   bool Reconnect();
   bool GetMultiAngle_s(int64_t *angle);
+  uint16_t GetSingleAngle_s();
   uint8_t GetHeaderCheckSum(uint8_t *command);
   bool GoAngleAbsolute(int64_t angle);
   bool GoAngleRelative(int64_t angle);
@@ -57,6 +58,7 @@ private:
   DWORD _bytesRead;
   DWORD _bytesWritten;
   bool _isInit;
+  uint8_t _checksum(uint8_t nums[], int start, int end);
 };
 
 } // namespace D5R
