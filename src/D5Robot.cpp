@@ -2,46 +2,45 @@
 
 namespace D5R {
 D5Robot::D5Robot(const char *serialPort, std::string natorID, uint8_t topRMDID,
-                 uint8_t botRMDID)
-    : _port(serialPort), 
-      _NatorMotor(natorID),
-      _topRMDMotor(_port.GetHandle(), topRMDID),
-      _botRMDMotor(_port.GetHandle(), botRMDID) {
-  _isInit =
-      _NatorMotor.IsInit() && _topRMDMotor.isInit() && _botRMDMotor.isInit();
-      if(!_isInit) {
-        throw RobotException(ErrorCode::CreateInstanceError);
-      }
+                 uint8_t botRMDID, std::string_view upCameraID)
+    : _port(serialPort), NatorMotor(natorID),
+      topRMDMotor(_port.GetHandle(), topRMDID),
+      botRMDMotor(_port.GetHandle(), botRMDID), upCamera(upCameraID) {
+  _isInit = NatorMotor.IsInit() && topRMDMotor.isInit() &&
+            botRMDMotor.isInit() && upCamera.IsInit();
+  if (!_isInit) {
+    throw RobotException(ErrorCode::CreateInstanceError);
+  }
 }
 D5Robot::~D5Robot() {}
 
 bool D5Robot::IsInit() { return _isInit; }
 
 bool D5Robot::SetZero() {
-  if (!_NatorMotor.SetZero()) {
+  if (!NatorMotor.SetZero()) {
     ERROR_("Failed to set nator motor zero");
     return false;
   }
-  if (!_topRMDMotor.SetZero()) {
+  if (!topRMDMotor.SetZero()) {
     ERROR_("Failed to set TOP RMD motor zero");
     return false;
   }
-  if (!_botRMDMotor.SetZero()) {
+  if (!botRMDMotor.SetZero()) {
     ERROR_("Failed to set BOT RMD motor zero");
     return false;
   }
   return true;
 }
 bool D5Robot::Stop() {
-  if (!_NatorMotor.Stop()) {
+  if (!NatorMotor.Stop()) {
     ERROR_("Failed to stop nator motor");
     return false;
   }
-  if (!_topRMDMotor.Stop()) {
+  if (!topRMDMotor.Stop()) {
     ERROR_("Failed to stop TOP RMD motor");
     return false;
   }
-  if (!_botRMDMotor.Stop()) {
+  if (!botRMDMotor.Stop()) {
     ERROR_("Failed to stop BOT RMD motor");
     return false;
   }
@@ -49,36 +48,60 @@ bool D5Robot::Stop() {
 }
 
 bool D5Robot::JointsMoveAbsolute(const Joints j) {
-  NTU_Point p{j.x, j.y, j.z};
-  if (!_NatorMotor.GoToPoint_A(p)) {
+  NTU_Point p{j.p2, j.p3, j.p4};
+  if (!NatorMotor.GoToPoint_A(p)) {
     ERROR_("Failed to move nator motor");
     return false;
   }
-  if (!_topRMDMotor.GoAngleAbsolute(j.r1)) {
+  if (!topRMDMotor.GoAngleAbsolute(j.r1)) {
     ERROR_("Failed to move top RMD motor");
     return false;
   }
-  if (!_botRMDMotor.GoAngleAbsolute(j.r5)) {
+  if (!botRMDMotor.GoAngleAbsolute(j.r5)) {
     ERROR_("Failed to move bot RMD motor");
     return false;
   }
   return true;
 }
 bool D5Robot::JointsMoveRelative(const Joints j) {
-  NTU_Point p{j.x, j.y, j.z};
-  if (!_NatorMotor.GoToPoint_R(p)) {
+  NTU_Point p{j.p2, j.p3, j.p4};
+  if (!NatorMotor.GoToPoint_R(p)) {
     ERROR_("Failed to move nator motor");
     return false;
   }
-  if (!_topRMDMotor.GoAngleRelative(j.r1)) {
+  if (!topRMDMotor.GoAngleRelative(j.r1)) {
     ERROR_("Failed to move top RMD motor");
     return false;
   }
-  if (!_botRMDMotor.GoAngleRelative(j.r5)) {
+  if (!botRMDMotor.GoAngleRelative(j.r5)) {
     ERROR_("Failed to move bot RMD motor");
     return false;
   }
   return true;
+}
+
+Points D5Robot::FwKine(const Joints j) {
+  double l[5]{38, 11.5, 17.25, 28, 18.1};
+  Points p{};
+  p.px = (l[2] + l[4]) * sin(j.r1 * M_PI / 180.0) +
+         j.p3 * cos(j.r1 * M_PI / 180.0) + j.p2 * sin(j.r1 * M_PI / 180.0);
+  p.py = -(l[2] + l[4]) * cos(j.r1 * M_PI / 180.0) +
+         j.p3 * sin(j.r1 * M_PI / 180.0) - j.p2 * cos(j.r1 * M_PI / 180.0);
+  p.pz = -j.p4 - (l[0] + l[1] + l[3]);
+  p.ry = j.r1;
+  p.rz = j.r5;
+  return p;
+}
+
+Joints D5Robot::InvKine(const Points p) {
+  Joints j{};
+  j.r1 = p.ry;
+  j.r5 = p.rz;
+  j.p2 =
+      p.px * sin(j.r1 * M_PI / 180.0) - p.py * cos(j.r1 * M_PI / 180.0) - 35.35;
+  j.p3 = p.px * cos(j.r1 * M_PI / 180.0) + p.py * sin(j.r1 * M_PI / 180.0);
+  j.p4 = -p.pz - 77.5;
+  return j;
 }
 
 } // namespace D5R
