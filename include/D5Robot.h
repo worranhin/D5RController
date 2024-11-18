@@ -2,14 +2,8 @@
 #include "LogUtil.h"
 #include "NatorMotor.h"
 #include "RMDMotor.h"
-#include "SerialPort.h"
 #include "RobotException.hpp"
-
-#ifdef D5R_EXPORTS
-#define D5R_API __declspec(dllexport)
-#else
-#define D5R_API __declspec(dllimport)
-#endif
+#include "SerialPort.h"
 
 namespace D5R {
 
@@ -29,7 +23,7 @@ struct Pose {
   double rz;
 };
 
-class D5R_API D5Robot {
+class D5Robot {
 public:
   NatorMotor natorMotor;
   RMDMotor topRMDMotor;
@@ -44,7 +38,7 @@ public:
   bool JointsMoveAbsolute(const Joints j);
   bool JointsMoveRelative(const Joints j);
   Joints GetCurrentJoint();
-  Pose GetCurrentPose();
+  Pose GetCurrentPose();  // TODO: implement
 
 private:
   SerialPort _port;
