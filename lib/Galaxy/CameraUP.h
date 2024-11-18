@@ -17,11 +17,14 @@ public:
   ~CameraUP();
   void GetJawModel(cv::Mat img, std::vector<cv::Point2f> &pst);
   void SIFT(cv::Mat img, ModelType modelname, std::vector<cv::Point2f> &pst);
+  double GetMapParam();
   std::vector<std::vector<float>> GetPos();
 
 private:
   Model _jaw;
   Model _clamp; // 手动初始化
+  cv::Mat _img;
+  double _mapParam;
 };
 
 } // namespace D5R

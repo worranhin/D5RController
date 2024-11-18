@@ -1,13 +1,32 @@
 #include "CameraUP.h"
 
 namespace D5R {
-
+/**
+ * @brief 构造函数
+ *
+ * @param id 相机的Mac地址
+ */
 CameraUP::CameraUP(std::string_view id) : GxCamera(id) {
   _clamp.img = cv::imread("./image/model/clamp.png", 0);
   _clamp.center = cv::Point2f(448, 63);
   _clamp.point = cv::Point2f(445.8, 101);
+  _mapParam = 0.00945188;
 }
+
+/**
+ * @brief 相机析构函数
+ *
+ */
 CameraUP::~CameraUP() {}
+
+/**
+ * @brief
+ * 获取钳口模板，记录钳口模板的定位信息，并返回钳口的初始位置信息，用以初始化夹钳位置
+ *
+ * @param img 相机获取的图片，为灰度图
+ * @param pst 钳口在像素坐标系下的位置信息，pst[0]:center;pst[1]:up positon
+ * point
+ */
 void CameraUP::GetJawModel(cv::Mat img, std::vector<cv::Point2f> &pst) {
   if (img.channels() != 1) {
     ERROR_("img should be gray type");
@@ -60,6 +79,15 @@ void CameraUP::GetJawModel(cv::Mat img, std::vector<cv::Point2f> &pst) {
   _jaw.point = midPoint_up - p0;
 }
 
+/**
+ * @brief
+ * 特征匹配算法，image与模板进行匹配，返回模板在image中的位置信息，需要注意的是，如果对JAW进行模板匹配，需确定已经获取JAW模板
+ *
+ * @param image 相机实时图像，灰度图
+ * @param modelname JAW-钳口 CLAMP-夹钳
+ * @param pst 模板在像素坐标系下的位置信息，pst[0]:center;pst[1]:positon point
+ *
+ */
 void D5R::CameraUP::SIFT(cv::Mat image, ModelType modelname,
                          std::vector<cv::Point2f> &pst) {
   cv::Mat model;
@@ -104,6 +132,56 @@ void D5R::CameraUP::SIFT(cv::Mat image, ModelType modelname,
   }
   cv::Mat homography = cv::findHomography(model_P, img_P, cv::RANSAC);
   cv::perspectiveTransform(modelPosition, pst, homography);
+}
+
+/**
+ * @brief 返回相机映射参数
+ *
+ * @return double 映射参数
+ */
+double CameraUP::GetMapParam() { return _mapParam; }
+
+/**
+ * @brief 读取相机图片，返回夹钳、钳口在像素坐标的位姿信息
+ *
+ * @return std::vector<std::vector<float>> 返回参数列表： {{jaw.center.x,
+ * jaw.center.y, jaw_angle}, {clamp.center.x, clamp.center.y, clamp_angle}}
+ */
+std::vector<std::vector<float>> CameraUP::GetPos() {
+  std::vector<std::vector<float>> pos;
+  if (_jaw.img.empty()) {
+    std::cerr << "Please run GetJawModel fun first" << std::endl;
+    return pos;
+  }
+  Read(_img);
+  if (_img.empty()) {
+    std::cerr << "Failed to read img" << std::endl;
+    return pos;
+  }
+  cv::Mat img = _img.clone();
+  std::vector<cv::Point2f> pos_jaw;
+  SIFT(img, JAW, pos_jaw);
+  float angle_jaw =
+      atan2f(pos_jaw[1].y - pos_jaw[0].y, pos_jaw[1].x - pos_jaw[0].x) *
+      (-180) / CV_PI;
+  pos.push_back({pos_jaw[0].x, pos_jaw[0].y, angle_jaw});
+  std::vector<cv::Point2f> pos_clamp;
+  SIFT(img, CLAMP, pos_clamp);
+  float angle_clamp =
+      atan2f(pos_clamp[0].y - pos_clamp[1].y, pos_clamp[0].x - pos_clamp[1].x) *
+      (-180) / CV_PI;
+  pos.push_back({pos_clamp[0].x, pos_clamp[0].y, angle_jaw});
+  cv::line(img, pos_jaw[0], pos_jaw[1], cv::Scalar(0), 2);
+  cv::line(img, pos_clamp[0], pos_clamp[1], cv::Scalar(0), 2);
+  cv::putText(img, std::to_string(angle_jaw), pos_jaw[1],
+              cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0));
+  cv::putText(img, std::to_string(angle_clamp), pos_clamp[0],
+              cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0));
+  std::string windowname = "image";
+  cv::namedWindow(windowname, cv::WINDOW_NORMAL);
+  cv::resizeWindow(windowname, cv::Size(1295, 1024));
+  cv::imshow(windowname, img);
+  return pos;
 }
 
 } // namespace D5R
