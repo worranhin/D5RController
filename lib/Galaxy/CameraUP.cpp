@@ -26,8 +26,10 @@ CameraUP::~CameraUP() {}
  * @param img 相机获取的图片，为灰度图
  * @param pst 钳口在像素坐标系下的位置信息，pst[0]:center;pst[1]:up positon
  * point
+ *
+ * @todo 需添加模板选择模块，输入需要的模板标签，ROI对应的模板区域并获取ROI信息
  */
-void CameraUP::GetJawModel(cv::Mat img, std::vector<cv::Point2f> &pst) {
+void CameraUP::GetJawModel(cv::Mat img) {
   if (img.channels() != 1) {
     ERROR_("img should be gray type");
     return;
@@ -68,12 +70,10 @@ void CameraUP::GetJawModel(cv::Mat img, std::vector<cv::Point2f> &pst) {
   cv::RotatedRect rect = cv::minAreaRect(hull);
   cv::Point2f rectPoints[4];
   rect.points(rectPoints);
-  pst.push_back(rect.center);
 
   int shortindex = (rect.size.width < rect.size.height) ? 1 : 0;
   cv::Point2f midPoint_up =
       0.5 * (rectPoints[shortindex] + rectPoints[(shortindex + 1) % 4]);
-  pst.push_back(midPoint_up);
 
   _jaw.center = rect.center - p0;
   _jaw.point = midPoint_up - p0;
@@ -86,6 +86,9 @@ void CameraUP::GetJawModel(cv::Mat img, std::vector<cv::Point2f> &pst) {
  * @param image 相机实时图像，灰度图
  * @param modelname JAW-钳口 CLAMP-夹钳
  * @param pst 模板在像素坐标系下的位置信息，pst[0]:center;pst[1]:positon point
+ *
+ * @todo
+ * JAW在钳口库模板匹配时，需ROI区域，否则其他钳口会发生干扰，ROI区域由GetJawModel函数确定，建议为类内变量
  *
  */
 void D5R::CameraUP::SIFT(cv::Mat image, ModelType modelname,

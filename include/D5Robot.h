@@ -1,5 +1,6 @@
 #pragma once
 #include "CameraUP.h"
+#include "KineHelper.hpp"
 #include "LogUtil.h"
 #include "NatorMotor.h"
 #include "RMDMotor.h"
@@ -23,13 +24,7 @@ struct Points {
   double rz;
 };
 
-struct Pose {
-  double px;
-  double py;
-  double pz;
-  double ry;
-  double rz;
-};
+Joints JAWPOINT{}; // 钳口位置，需要实验确定
 
 class D5Robot {
 public:
@@ -38,20 +33,22 @@ public:
   RMDMotor botRMDMotor;
   CameraUP upCamera;
 
-  D5Robot(const char *serialPort, std::string natorID, uint8_t topRMDID,
-          uint8_t botRMDID, std::string_view upCameraID);
+  D5Robot(const char *serialPort, std::string natorID = "usb:id:7547982319",
+          uint8_t topRMDID = 1, uint8_t botRMDID = 2,
+          std::string_view upCameraID = "00-21-49-03-4D-95");
   ~D5Robot();
   bool IsInit();
   bool SetZero();
   bool Stop();
   bool JointsMoveAbsolute(const Joints j);
   bool JointsMoveRelative(const Joints j);
+  bool VCJawChange();
 
   Joints GetCurrentJoint();
-  Pose GetCurrentPose();  // TODO: implement
-  Points FwKine(const Joints j);
-  Joints InvKine(const Points p);
-  
+  Points GetCurrentPose(); // TODO: implement
+  // Points FwKine(const Joints j);
+  // Joints InvKine(const Points p);
+
 private:
   SerialPort _port;
   bool _isInit;

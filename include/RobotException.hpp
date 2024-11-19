@@ -33,8 +33,10 @@ public:
       return "Nator Error";
     case ErrorCode::RMDError:
       return "RMD Error";
+    case ErrorCode::CameraError:
+      return "Camera Error";
     default:
-      std::string s = "Unknown Error: " + std::to_string(code);
+      std::string s = "Other Error: " + std::to_string(code);
       return s.c_str();
     }
   }

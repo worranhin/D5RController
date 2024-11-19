@@ -19,6 +19,11 @@ enum ErrorCode {
   RMDInitError = 401,
   RMDGetPIError = 402,
   RMDFormatError,
-  RMDChecksumError
+  RMDChecksumError,
+  D5RError = 500,
+  D5RMoveError,
+  CameraError = 600,
+  CameraInitError,
+  CameraReadError
 };
 }

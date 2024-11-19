@@ -15,7 +15,7 @@ class CameraUP : public GxCamera {
 public:
   CameraUP(std::string_view id);
   ~CameraUP();
-  void GetJawModel(cv::Mat img, std::vector<cv::Point2f> &pst);
+  void GetJawModel(cv::Mat img);
   void SIFT(cv::Mat img, ModelType modelname, std::vector<cv::Point2f> &pst);
   double GetMapParam();
   std::vector<std::vector<float>> GetPixelPos();

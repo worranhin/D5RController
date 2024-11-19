@@ -94,34 +94,76 @@ Joints D5Robot::GetCurrentJoint() {
 
   return j;
 }
-  
-Pose D5Robot::GetCurrentPose() {
+
+Points D5Robot::GetCurrentPose() {
   throw std::logic_error("Not implemented");
   //  return Pose();
 }
 
-Points D5Robot::FwKine(const Joints j) {
-  double l[5]{38, 11.5, 17.25, 28, 18.1};
-  Points p{};
-  p.px = (l[2] + l[4]) * sin(j.r1 * M_PI / 180.0) +
-         j.p3 * cos(j.r1 * M_PI / 180.0) + j.p2 * sin(j.r1 * M_PI / 180.0);
-  p.py = -(l[2] + l[4]) * cos(j.r1 * M_PI / 180.0) +
-         j.p3 * sin(j.r1 * M_PI / 180.0) - j.p2 * cos(j.r1 * M_PI / 180.0);
-  p.pz = -j.p4 - (l[0] + l[1] + l[3]);
-  p.ry = j.r1;
-  p.rz = j.r5;
-  return p;
-}
+// Points D5Robot::FwKine(const Joints j) {
+//   double l[5]{38, 11.5, 17.25, 28, 18.1};
+//   Points p{};
+//   p.px = (l[2] + l[4]) * sin(j.r1 * M_PI / 180.0) +
+//          j.p3 * cos(j.r1 * M_PI / 180.0) + j.p2 * sin(j.r1 * M_PI / 180.0);
+//   p.py = -(l[2] + l[4]) * cos(j.r1 * M_PI / 180.0) +
+//          j.p3 * sin(j.r1 * M_PI / 180.0) - j.p2 * cos(j.r1 * M_PI / 180.0);
+//   p.pz = -j.p4 - (l[0] + l[1] + l[3]);
+//   p.ry = j.r1;
+//   p.rz = j.r5;
+//   return p;
+// }
 
-Joints D5Robot::InvKine(const Points p) {
-  Joints j{};
-  j.r1 = p.ry;
-  j.r5 = p.rz;
-  j.p2 =
-      p.px * sin(j.r1 * M_PI / 180.0) - p.py * cos(j.r1 * M_PI / 180.0) - 35.35;
-  j.p3 = p.px * cos(j.r1 * M_PI / 180.0) + p.py * sin(j.r1 * M_PI / 180.0);
-  j.p4 = -p.pz - 77.5;
-  return j;
+// Joints D5Robot::InvKine(const Points p) {
+//   Joints j{};
+//   j.r1 = p.ry;
+//   j.r5 = p.rz;
+//   j.p2 =
+//       p.px * sin(j.r1 * M_PI / 180.0) - p.py * cos(j.r1 * M_PI / 180.0)
+//       - 35.35;
+//   j.p3 = p.px * cos(j.r1 * M_PI / 180.0) + p.py * sin(j.r1 * M_PI / 180.0);
+//   j.p4 = -p.pz - 77.5;
+//   return j;
+// }
+
+bool D5Robot::VCJawChange() {
+  cv::Mat img;
+  if (!upCamera.Read(img)) {
+    throw RobotException(ErrorCode::CameraReadError);
+    return false;
+  }
+  // 初始化夹钳位置 -- 根据目标钳口库选择
+  if (!JointsMoveAbsolute(JAWPOINT)) {
+    throw RobotException(ErrorCode::D5RMoveError);
+    return false;
+  }
+
+  /* 需要延时么 */
+
+  /* 第二个相机移动z轴 */
+
+  // 获取钳口模板
+  upCamera.GetJawModel(img);
+  // 初始化误差
+  std::vector<double> posError = upCamera.GetPhysicError();
+
+  // 插入PID
+  TaskSpace pError{posError[0], posError[1], 0, 0, posError[2]};
+  JointSpace jError{};
+  while (pError.Px > 0.01 && pError.Py > 0.01 && pError.Rz > 0.1) {
+    pError.Py = 0.05 * pError.Py;
+    jError = KineHelper::Inverse(pError);
+    int jx = static_cast<int>(jError.P2 * 1000000);
+    int jy = static_cast<int>(jError.P3 * 1000000);
+    natorMotor.GoToPoint_R({jx, jy, 0});
+    int32_t speed =
+        static_cast<int32_t>(jError.R5 * 100000 / 20); // 需要计算匹配的时间
+    topRMDMotor.SpeedControl(speed);
+    Sleep(20);
+    posError.clear();
+    posError = upCamera.GetPhysicError();
+    pError = {posError[0], posError[1], 0, 0, posError[2]};
+  }
+  return true;
 }
 
 } // namespace D5R
