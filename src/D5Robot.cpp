@@ -1,6 +1,8 @@
 #include "D5Robot.h"
 
 namespace D5R {
+Joints JAWPOINT{};
+
 D5Robot::D5Robot(const char *serialPort, std::string natorID, uint8_t topRMDID,
                  uint8_t botRMDID, std::string_view upCameraID)
     : _port(serialPort), natorMotor(natorID),

@@ -24,7 +24,7 @@ struct Points {
   double rz;
 };
 
-Joints JAWPOINT{}; // 钳口位置，需要实验确定
+// extern Joints JAWPOINT; // 钳口位置，需要实验确定
 
 class D5Robot {
 public:
