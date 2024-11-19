@@ -6,7 +6,7 @@ D5Robot::D5Robot(const char *serialPort, std::string natorID, uint8_t topRMDID,
     : _port(serialPort), natorMotor(natorID),
       topRMDMotor(_port.GetHandle(), topRMDID),
       botRMDMotor(_port.GetHandle(), botRMDID), upCamera(upCameraID) {
-  _isInit = NatorMotor.IsInit() && topRMDMotor.isInit() &&
+  _isInit = natorMotor.IsInit() && topRMDMotor.isInit() &&
             botRMDMotor.isInit() && upCamera.IsInit();
   if (!_isInit) {
     throw RobotException(ErrorCode::CreateInstanceError);
@@ -88,9 +88,9 @@ Joints D5Robot::GetCurrentJoint() {
 
   NTU_Point np;
   this->natorMotor.GetPosition(&np);
-  j.x = np.x;
-  j.y = np.y;
-  j.z = np.z;
+  j.p2 = np.x;
+  j.p3 = np.y;
+  j.p4 = np.z;
 
   return j;
 }

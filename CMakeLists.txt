@@ -11,11 +11,19 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 add_subdirectory(lib/RMD)
 add_subdirectory(lib/Nator)
 add_subdirectory(lib/Galaxy)
-add_library(D5Robot SHARED src/D5Robot.cpp src/DllApi.cpp)
 
+add_library(D5Robot src/D5Robot.cpp)
 target_include_directories(D5Robot PUBLIC "${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include" "${PROJECT_SOURCE_DIR}/lib/RMD" "${PROJECT_SOURCE_DIR}/lib/Nator" "${PROJECT_SOURCE_DIR}/lib/Galaxy")
 target_link_libraries(D5Robot PUBLIC RMDMotor)
 target_link_libraries(D5Robot PUBLIC NatorMotor)
 target_link_libraries(D5Robot PUBLIC Camera)
 
-target_compile_definitions(D5Robot PUBLIC "D5R_EXPORTS")
+
+add_library(D5RbotApi SHARED src/DllApi.cpp)
+target_include_directories(D5RbotApi PUBLIC "${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include")
+target_link_libraries(D5RbotApi D5Robot)
+target_compile_definitions(D5RbotApi PUBLIC "D5R_EXPORTS")
+
+add_executable(test test.cpp)
+target_link_libraries(test D5Robot)
+target_link_libraries(test D5RbotApi)

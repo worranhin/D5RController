@@ -6,6 +6,7 @@
 D5R::D5Robot *pRobot;
 const std::string port = "\\\\.\\COM14";
 const std::string natorID = "usb:id:7547982319";
+const std::string upCameraID = "TODO: Upate upCameraId";
 
 int TestMoving();
 void TestKineHelper();
@@ -20,9 +21,8 @@ int main() {
 }
 
 int TestMoving() {
-  // ***** Test Init ***** //
   try {
-    D5R::D5Robot robot(port.c_str(), natorID, 1, 2);
+    D5R::D5Robot robot(port.c_str(), natorID, 1, 2, upCameraID);
     D5R::Joints ja = {0, -13000000, 0, 0, 0};
     D5R::Joints jr = {200, 1000000, 0, 0, 6000};
     robot.JointsMoveAbsolute(ja);
@@ -39,9 +39,9 @@ int TestMoving() {
 
 void TestApi() {
   D5R::ErrorCode ec;
-  ec = CreateD5RobotInstance(pRobot, port.c_str(), natorID.c_str(), 1, 2);
+  ec = CreateD5RobotInstance(pRobot, port.c_str(), natorID.c_str(), 1, 2,
+                             upCameraID.c_str());
   std::cout << ec << std::endl;
-  // pRobot = CreateD5RobotInstance2(port.c_str(), natorID.c_str(), 1, 2);
   // CallJointsMoveAbsolute(pRobot, {0, -13000000, 0, 0, 0});
   ec = CallJointsMoveRelative(pRobot, {-1000, 1000000, 2000000, 3000000, 1000});
   std::cout << ec << std::endl;

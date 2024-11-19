@@ -43,8 +43,8 @@ public:
   uint8_t GetHeaderCheckSum(uint8_t *command);
   bool GoAngleAbsolute(int64_t angle);
   bool GoAngleRelative(int64_t angle);
-  int16_t OpenLoopControl(int16_t power); // TODO: implement
-  void SpeedControl(int32_t speed);       // TODO: implement
+  int16_t OpenLoopControl(int16_t power);
+  void SpeedControl(int32_t speed);
   bool Stop();
   bool SetZero();
   bool GetPI();
