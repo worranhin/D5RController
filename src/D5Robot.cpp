@@ -1,15 +1,17 @@
 #include "D5Robot.h"
 
 namespace D5R {
-Joints JAWPOINT{};
+
+Joints JAWPOINT{}; // 钳口位置，需要实验确定
 
 D5Robot::D5Robot(const char *serialPort, std::string natorID, uint8_t topRMDID,
-                 uint8_t botRMDID, std::string_view upCameraID)
-    : _port(serialPort), natorMotor(natorID),
-      topRMDMotor(_port.GetHandle(), topRMDID),
-      botRMDMotor(_port.GetHandle(), botRMDID), upCamera(upCameraID) {
-  _isInit = natorMotor.IsInit() && topRMDMotor.isInit() &&
-            botRMDMotor.isInit() && upCamera.IsInit();
+                 uint8_t botRMDID, std::string upCameraID)
+    : _port(serialPort), natorMotor(natorID), upCamera(upCameraID) {
+  topRMDMotor._id = topRMDID;
+  topRMDMotor._handle = _port.GetHandle();
+  botRMDMotor._id = botRMDID;
+  botRMDMotor._handle = _port.GetHandle();
+  _isInit = natorMotor.IsInit() && upCamera.IsInit();
   if (!_isInit) {
     throw RobotException(ErrorCode::CreateInstanceError);
   }

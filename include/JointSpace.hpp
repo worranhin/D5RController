@@ -22,7 +22,13 @@ public:
     P4 = joint.p4 / 1000000.0;
     R5 = joint.r5 / 100.0;
   }
-  // JointSpace()
+  JointSpace(double r1, double p2, double p3, double p4, double r5) {
+    R1 = r1;
+    P2 = p2;
+    P3 = p3;
+    P4 = p4;
+    R5 = r5;
+  }
 
   Joints ToControlJoint() {
     Joints j;

@@ -1,12 +1,12 @@
 #pragma once
 #include "CameraUP.h"
+#include "Joints.h"
 #include "KineHelper.hpp"
 #include "LogUtil.h"
 #include "NatorMotor.h"
 #include "RMDMotor.h"
 #include "RobotException.hpp"
 #include "SerialPort.h"
-#include "Joints.h"
 
 namespace D5R {
 
@@ -18,8 +18,6 @@ struct Points {
   double rz;
 };
 
-// extern Joints JAWPOINT; // 钳口位置，需要实验确定
-
 class D5Robot {
 public:
   NatorMotor natorMotor;
@@ -29,7 +27,7 @@ public:
 
   D5Robot(const char *serialPort, std::string natorID = "usb:id:7547982319",
           uint8_t topRMDID = 1, uint8_t botRMDID = 2,
-          std::string_view upCameraID = "00-21-49-03-4D-95");
+          std::string upCameraID = "00-21-49-03-4D-95");
   ~D5Robot();
   bool IsInit();
   bool SetZero();

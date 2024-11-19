@@ -32,6 +32,7 @@ enum ID_ENTRY {
 };
 class RMDMotor {
 public:
+  RMDMotor();
   RMDMotor(const char *serialPort, uint8_t id);
   RMDMotor(HANDLE comHandle, uint8_t id);
   ~RMDMotor();
@@ -53,10 +54,11 @@ public:
 
   PIPARAM _piParam;
 
+  HANDLE _handle;
+  uint8_t _id;
+
 private:
   const char *_serialPort;
-  uint8_t _id;
-  HANDLE _handle;
   DWORD _bytesRead;
   DWORD _bytesWritten;
   bool _isInit;

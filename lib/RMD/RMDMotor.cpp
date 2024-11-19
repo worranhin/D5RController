@@ -26,6 +26,7 @@ namespace D5R {
  * parameters of the motor. If the serial port is invalid, the constructor
  * will print an error message and set the _isInit flag to false.
  */
+RMDMotor::RMDMotor() {}
 RMDMotor::RMDMotor(const char *serialPort, uint8_t id)
     : _serialPort(serialPort), _id(id) {
   _isInit = Init();
@@ -45,7 +46,8 @@ RMDMotor::RMDMotor(const char *serialPort, uint8_t id)
  * should ensure that the serial port is valid and the handle is a valid
  * handle to the serial port.
  */
-RMDMotor::RMDMotor(HANDLE comHandle, uint8_t id) : _handle(comHandle), _id(id) {
+RMDMotor::RMDMotor(HANDLE comHandle, uint8_t id) : _id(id) {
+  _handle = comHandle;
   GetPI();
   _isInit = true;
 }
@@ -246,6 +248,8 @@ bool RMDMotor::GoAngleAbsolute(int64_t angle) {
 
   if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
     ERROR_("GoToAngle: Failed to send command to device");
+    auto err = GetLastError();
+    std::cerr << err << std::endl;
     return false;
   }
   return true;
@@ -419,6 +423,8 @@ bool RMDMotor::GetPI() {
 
   if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
     ERROR_("GetPI: Failed to send command to device");
+    // ERROR_(GetLastError)
+    std::cerr << GetLastError() << std::endl;
     throw RobotException(ErrorCode::SerialSendError);
     return false;
   }

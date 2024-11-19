@@ -3,26 +3,49 @@
 #include "KineHelper.hpp"
 #include "RobotException.hpp"
 
-D5R::D5Robot *pRobot;
-const std::string port = "\\\\.\\COM14";
+const std::string port = "\\\\.\\COM16";
 const std::string natorID = "usb:id:7547982319";
-const std::string upCameraID = "TODO: Upate upCameraId";
 
-int TestMoving();
-void TestKineHelper();
-void TestApi();
+// int TestMoving();
+// void TestKineHelper();
+// void TestApi();
 
 int main() {
   // TestMoving();
   // TestApi();
   // TestKineHelper();
+  D5R::D5Robot robot(port.c_str());
+  // robot.Stop();
+  // robot.JointsMoveAbsolute({0, 0, 0, -500000, 0});
+  // robot.JointsMoveAbsolute({0, 500000, 6000000, -7000000, 0});
+  robot.JointsMoveAbsolute({0, 500000, 6000000, -2700000, 0});
+
+  cv::Mat img;
+  std::string winname = "test";
+  cv::namedWindow(winname, cv::WINDOW_NORMAL);
+  cv::resizeWindow(winname, cv::Size(1295, 1024));
+  int count = 0;
+  while (robot.upCamera.Read(img)) {
+
+    cv::imshow(winname, img);
+    // cv::rectangle(img, cv::Poitn())
+    if (cv::waitKey(1) == 27) {
+      break;
+    }
+    if (cv::waitKey(1) == 32) {
+      std::string filename =
+          "../image/11_19/jaw_1" + std::to_string(count) + ".png";
+      cv::imwrite(filename, img);
+    }
+  }
 
   return 0;
 }
 
 int TestMoving() {
+  // ***** Test Init ***** //
   try {
-    D5R::D5Robot robot(port.c_str(), natorID, 1, 2, upCameraID);
+    D5R::D5Robot robot(port.c_str());
     D5R::Joints ja = {0, -13000000, 0, 0, 0};
     D5R::Joints jr = {200, 1000000, 0, 0, 6000};
     robot.JointsMoveAbsolute(ja);
@@ -39,9 +62,10 @@ int TestMoving() {
 
 void TestApi() {
   D5R::ErrorCode ec;
-  ec = CreateD5RobotInstance(pRobot, port.c_str(), natorID.c_str(), 1, 2,
-                             upCameraID.c_str());
+  D5R::D5Robot *pRobot;
+  ec = CreateD5RobotInstance(pRobot, port.c_str());
   std::cout << ec << std::endl;
+  // pRobot = CreateD5RobotInstance2(port.c_str(), natorID.c_str(), 1, 2);
   // CallJointsMoveAbsolute(pRobot, {0, -13000000, 0, 0, 0});
   ec = CallJointsMoveRelative(pRobot, {-1000, 1000000, 2000000, 3000000, 1000});
   std::cout << ec << std::endl;
@@ -51,7 +75,7 @@ void TestApi() {
 }
 
 void TestKineHelper() {
-  D5R::JointSpace js ({0, 0, 0, 0, 0});
+  D5R::JointSpace js(0.0, 0.0, 0.0, 0.0, 0.0);
   D5R::TaskSpace ts = D5R::KineHelper::Forward(js);
   std::cout << ts.Px << " " << ts.Py << " " << ts.Pz << " " << ts.Ry << " "
             << ts.Rz << std::endl;
