@@ -51,7 +51,7 @@ void TestApi() {
 }
 
 void TestKineHelper() {
-  D5R::JointSpace js = {0, 0, 0, 0, 0};
+  D5R::JointSpace js ({0, 0, 0, 0, 0});
   D5R::TaskSpace ts = D5R::KineHelper::Forward(js);
   std::cout << ts.Px << " " << ts.Py << " " << ts.Pz << " " << ts.Ry << " "
             << ts.Rz << std::endl;

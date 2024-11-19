@@ -97,9 +97,11 @@ Joints D5Robot::GetCurrentJoint() {
   return j;
 }
 
-Points D5Robot::GetCurrentPose() {
-  throw std::logic_error("Not implemented");
-  //  return Pose();
+TaskSpace D5Robot::GetCurrentPose() {
+  auto joint = GetCurrentJoint();
+  JointSpace js(joint);
+  auto ts = KineHelper::Forward(js);
+  return ts;
 }
 
 // Points D5Robot::FwKine(const Joints j) {

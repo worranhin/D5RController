@@ -6,16 +6,10 @@
 #include "RMDMotor.h"
 #include "RobotException.hpp"
 #include "SerialPort.h"
+#include "Joints.h"
 
 namespace D5R {
 
-struct Joints {
-  int r1;
-  int p2;
-  int p3;
-  int p4;
-  int r5;
-};
 struct Points {
   double px;
   double py;
@@ -45,7 +39,7 @@ public:
   bool VCJawChange();
 
   Joints GetCurrentJoint();
-  Points GetCurrentPose(); // TODO: implement
+  TaskSpace GetCurrentPose();
   // Points FwKine(const Joints j);
   // Joints InvKine(const Points p);
 
