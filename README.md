@@ -12,3 +12,7 @@
 
 > 为什么？这是厂家的 bug 处理方式。
 
+注意！需要将lib/Galaxy/VCSDK/dll/GxlAPI.dll加入根目录下的build文件中
+
+> 小编也很无奈，能力不足，无法解决该bug
+

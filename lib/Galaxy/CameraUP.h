@@ -13,7 +13,7 @@ enum ModelType { JAW = 0, CLAMP = 1 };
 
 class CameraUP : public GxCamera {
 public:
-  CameraUP(std::string_view id);
+  CameraUP(std::string id);
   ~CameraUP();
   void GetJawModel(cv::Mat img);
   void SIFT(cv::Mat img, ModelType modelname, std::vector<cv::Point2f> &pst);

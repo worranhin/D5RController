@@ -6,7 +6,7 @@ namespace D5R {
  *
  * @param id 相机的Mac地址
  */
-CameraUP::CameraUP(std::string_view id) : GxCamera(id) {
+CameraUP::CameraUP(std::string id) : GxCamera(id) {
   _clamp.img = cv::imread("./image/model/clamp.png", 0);
   _clamp.center = cv::Point2f(448, 63);
   _clamp.point = cv::Point2f(445.8, 101);
