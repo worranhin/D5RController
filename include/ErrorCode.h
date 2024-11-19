@@ -12,11 +12,18 @@ enum ErrorCode {
   SerialCloseError = 202,
   SerialSendError = 203,
   SerialReceiveError,
+  SerialReceiveError_LessThanExpected,
   NatorError = 300,
   NatorInitError = 301,
   RMDError = 400,
   RMDInitError = 401,
-  RMDGetPIError = 402
+  RMDGetPIError = 402,
+  RMDFormatError,
+  RMDChecksumError,
+  D5RError = 500,
+  D5RMoveError,
+  CameraError = 600,
+  CameraInitError,
+  CameraReadError
 };
-
 }

@@ -11,9 +11,10 @@
 
 ErrorCode CreateD5RobotInstance(D5Robot *&instance, const char *serialPort,
                                 const char *natorID, uint8_t topRMDID,
-                                uint8_t bottomRMDID) {
+                                uint8_t bottomRMDID, const char *upCameraID) {
   try {
-    instance = new D5Robot(serialPort, natorID, topRMDID, bottomRMDID);
+    instance =
+        new D5Robot(serialPort, natorID, topRMDID, bottomRMDID, upCameraID);
     return ErrorCode::OK;
   } catch (const RobotException &e) {
     return e.code;

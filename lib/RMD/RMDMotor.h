@@ -32,6 +32,7 @@ enum ID_ENTRY {
 };
 class RMDMotor {
 public:
+  RMDMotor();
   RMDMotor(const char *serialPort, uint8_t id);
   RMDMotor(HANDLE comHandle, uint8_t id);
   ~RMDMotor();
@@ -39,9 +40,12 @@ public:
   bool isInit();
   bool Reconnect();
   bool GetMultiAngle_s(int64_t *angle);
+  uint16_t GetSingleAngle_s();
   uint8_t GetHeaderCheckSum(uint8_t *command);
   bool GoAngleAbsolute(int64_t angle);
   bool GoAngleRelative(int64_t angle);
+  int16_t OpenLoopControl(int16_t power);
+  void SpeedControl(int32_t speed);
   bool Stop();
   bool SetZero();
   bool GetPI();
@@ -50,13 +54,15 @@ public:
 
   PIPARAM _piParam;
 
+  HANDLE _handle;
+  uint8_t _id;
+
 private:
   const char *_serialPort;
-  uint8_t _id;
-  HANDLE _handle;
   DWORD _bytesRead;
   DWORD _bytesWritten;
   bool _isInit;
+  uint8_t _checksum(uint8_t nums[], int start, int end);
 };
 
 } // namespace D5R

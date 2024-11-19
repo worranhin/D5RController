@@ -26,6 +26,7 @@ namespace D5R {
  * parameters of the motor. If the serial port is invalid, the constructor
  * will print an error message and set the _isInit flag to false.
  */
+RMDMotor::RMDMotor() {}
 RMDMotor::RMDMotor(const char *serialPort, uint8_t id)
     : _serialPort(serialPort), _id(id) {
   _isInit = Init();
@@ -45,7 +46,8 @@ RMDMotor::RMDMotor(const char *serialPort, uint8_t id)
  * should ensure that the serial port is valid and the handle is a valid
  * handle to the serial port.
  */
-RMDMotor::RMDMotor(HANDLE comHandle, uint8_t id) : _handle(comHandle), _id(id) {
+RMDMotor::RMDMotor(HANDLE comHandle, uint8_t id) : _id(id) {
+  _handle = comHandle;
   GetPI();
   _isInit = true;
 }
@@ -171,6 +173,45 @@ bool RMDMotor::GetMultiAngle_s(int64_t *angle) {
   return true;
 }
 
+uint16_t RMDMotor::GetSingleAngle_s() {
+  uint8_t command[5] = {0x3E, 0x94, 0x00, 0x00, 0x00};
+  command[2] = _id;
+  command[4] = GetHeaderCheckSum(command);
+
+  const DWORD bytesToRead = 8;
+  uint8_t readBuf[bytesToRead];
+
+  if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
+    throw RobotException(ErrorCode::SerialSendError);
+  }
+
+  if (!ReadFile(_handle, readBuf, bytesToRead, &_bytesRead, NULL)) {
+    throw RobotException(ErrorCode::SerialReceiveError);
+  }
+
+  // check received length
+  if (_bytesRead != bytesToRead) {
+    throw RobotException(ErrorCode::SerialReceiveError_LessThanExpected);
+  }
+
+  // check received format
+  if (readBuf[0] != 0x3E || readBuf[1] != 0x94 || readBuf[2] != _id ||
+      readBuf[3] != 0x02 || readBuf[4] != _checksum(readBuf, 0, 4)) {
+    throw RobotException(ErrorCode::RMDFormatError);
+  }
+
+  // check data sum
+  if (_checksum(readBuf, 5, 7) != readBuf[7]) {
+    throw RobotException(ErrorCode::RMDChecksumError);
+  }
+
+  uint16_t circleAngle = 0;
+  *(uint8_t *)(&circleAngle) = readBuf[5];
+  *((uint8_t *)(&circleAngle) + 1) = readBuf[6];
+
+  return circleAngle;
+}
+
 // 帧头计算------------------------------------------
 uint8_t RMDMotor::GetHeaderCheckSum(uint8_t *command) {
   uint8_t sum = 0x00;
@@ -207,6 +248,8 @@ bool RMDMotor::GoAngleAbsolute(int64_t angle) {
 
   if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
     ERROR_("GoToAngle: Failed to send command to device");
+    auto err = GetLastError();
+    std::cerr << err << std::endl;
     return false;
   }
   return true;
@@ -236,6 +279,113 @@ bool RMDMotor::GoAngleRelative(int64_t angle) {
     return false;
   }
   return true;
+}
+
+/**
+ * @brief 开环控制
+ *
+ * This function sends a command to the motor to set its power level for open
+ * loop control. It communicates with the motor via a serial interface, sending
+ * a command packet and waiting for a response. The function checks for
+ * communication errors and validates the response format and checksum.
+ *
+ * @param power 开环输出功率，数值范围 [-1000, 1000]
+ *
+ * @return The actual speed of the motor as reported by the motor in response,
+ * represented as a 16-bit integer.
+ *
+ * @throw RobotException if there is an error in communication or if the
+ * received data is malformed or fails checksum verification.
+ */
+int16_t RMDMotor::OpenLoopControl(int16_t power) {
+  uint8_t command[8];
+  command[0] = 0x3E;
+  command[1] = 0xA0;
+  command[2] = _id;
+  command[3] = 0x02;
+  command[4] = _checksum(command, 0, 4);
+  command[5] = *(uint8_t *)(&power);
+  command[6] = *((uint8_t *)(&power) + 1);
+  command[7] = _checksum(command, 5, 7);
+
+  const DWORD bytesToRead = 13;
+  uint8_t readBuf[bytesToRead];
+
+  if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
+    throw RobotException(ErrorCode::SerialSendError);
+  }
+
+  if (!ReadFile(_handle, readBuf, bytesToRead, &_bytesRead, NULL)) {
+    throw RobotException(ErrorCode::SerialReceiveError);
+  }
+
+  // check received length
+  if (_bytesRead != bytesToRead) {
+    throw RobotException(ErrorCode::SerialReceiveError_LessThanExpected);
+  }
+
+  // check received format
+  if (readBuf[0] != 0x3E || readBuf[1] != 0xA0 || readBuf[2] != _id ||
+      readBuf[3] != 0x07 || readBuf[4] != _checksum(readBuf, 0, 4)) {
+    throw RobotException(ErrorCode::RMDFormatError);
+  }
+
+  // check data sum
+  if (_checksum(readBuf, 5, 12) != readBuf[12]) {
+    throw RobotException(ErrorCode::RMDChecksumError);
+  }
+
+  int16_t speed = 0;
+  *(uint8_t *)(&speed) = readBuf[8];
+  *((uint8_t *)(&speed) + 1) = readBuf[9];
+
+  return speed;
+}
+
+/**
+ * @brief 速度控制
+ * @param speed 电机速度，单位是 0.01 dps/LSB
+ * @throw RobotException if the operation fails
+ */
+void RMDMotor::SpeedControl(int32_t speed) {
+  uint8_t command[10];
+  command[0] = 0x3E;
+  command[1] = 0xA2;
+  command[2] = _id;
+  command[3] = 0x04;
+  command[4] = _checksum(command, 0, 4);
+  command[5] = *(uint8_t *)(&speed);
+  command[6] = *((uint8_t *)(&speed) + 1);
+  command[7] = *((uint8_t *)(&speed) + 2);
+  command[8] = *((uint8_t *)(&speed) + 3);
+  command[9] = _checksum(command, 5, 9);
+
+  const DWORD bytesToRead = 13;
+  uint8_t readBuf[bytesToRead];
+
+  if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
+    throw RobotException(ErrorCode::SerialSendError);
+  }
+
+  if (!ReadFile(_handle, readBuf, bytesToRead, &_bytesRead, NULL)) {
+    throw RobotException(ErrorCode::SerialReceiveError);
+  }
+
+  // check received length
+  if (_bytesRead != bytesToRead) {
+    throw RobotException(ErrorCode::SerialReceiveError_LessThanExpected);
+  }
+
+  // check received format
+  if (readBuf[0] != 0x3E || readBuf[1] != 0xA2 || readBuf[2] != _id ||
+      readBuf[3] != 0x07 || readBuf[4] != _checksum(readBuf, 0, 4)) {
+    throw RobotException(ErrorCode::RMDFormatError);
+  }
+
+  // check data sum
+  if (_checksum(readBuf, 5, 12) != readBuf[12]) {
+    throw RobotException(ErrorCode::RMDChecksumError);
+  }
 }
 
 // 急停----------------------------------------------
@@ -273,6 +423,8 @@ bool RMDMotor::GetPI() {
 
   if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
     ERROR_("GetPI: Failed to send command to device");
+    // ERROR_(GetLastError)
+    std::cerr << GetLastError() << std::endl;
     throw RobotException(ErrorCode::SerialSendError);
     return false;
   }
@@ -359,6 +511,22 @@ bool RMDMotor::DebugAnglePI(const uint8_t *arrPI) {
     ERROR_("Failed to updata PI param");
   }
   return true;
+}
+
+/**
+ * \brief Calculate checksum of a given array segment
+ * \param nums The array to calculate checksum
+ * \param start The start index of the segment to calculate checksum (include)
+ * \param end The end index of the segment to calculate checksum (not include)
+ * \return The checksum of the given array segment
+ */
+uint8_t RMDMotor::_checksum(uint8_t nums[], int start, int end) {
+  uint8_t sum = 0;
+  for (int i = start; i < end; i++) {
+    sum += nums[i];
+  }
+
+  return sum;
 }
 
 } // namespace D5R
