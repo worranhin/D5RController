@@ -23,16 +23,16 @@ private:
 
   inline static const double _R1min = -90.0, _R1max = 90.0;
   inline static const double _R5min = -45.0, _R5max = 90.0;
-  inline static const double _P2min = -12.0, _P2max = 12.0;
-  inline static const double _P3min = -12.0, _P3max = 12.0;
-  inline static const double _P4min = -12.0, _P4max = 12.0;
+  inline static const double _P2min = -15.0, _P2max = 15.0;
+  inline static const double _P3min = -15.0, _P3max = 15.0;
+  inline static const double _P4min = -15.0, _P4max = 15.0;
 
 public:
   static TaskSpace Forward(const JointSpace &space) {
     double m1 = l3 + l5 + lty + space.P2;
 
     if (!CheckJoint(space)) {
-      throw std::out_of_range("Joint out of range.");
+        throw std::out_of_range("In KineHelper::Forward: Joint out of range.");
     }
 
     TaskSpace ts;
@@ -78,6 +78,73 @@ public:
     js.P4 = std::round(js.P4 * 100) / 100;
 
     return js;
+  }
+
+  static JointSpace InverseDifferential(const TaskSpace &deltaSpace, const TaskSpace &currentSpace) {
+      JointSpace js;
+
+      double dRz = deltaSpace.Rz;
+      double dRy = deltaSpace.Ry;
+      double dPx = deltaSpace.Px;
+      double dPy = deltaSpace.Py;
+      double dPz = deltaSpace.Pz;
+
+      double rz = currentSpace.Rz;
+      double ry = currentSpace.Ry;
+      double px = currentSpace.Px;
+      double py = currentSpace.Py;
+      double pz = currentSpace.Pz;
+
+      //   js.R1 = deltaSpace.Rz;
+      //   js.R5 = -deltaSpace.Ry;
+      //   js.P2 = Sind(currentSpace.Rz) * deltaSpace.Px + currentSpace.Px * Cosd(currentSpace.Rz) * deltaSpace.Rz
+
+      js.R1 = dRz;
+      js.R5 = -dRy;
+      js.P2 = Sind(rz) * dPx + px * Cosd(rz) * dRz - (Cosd(rz) * dPy - py * Sind(rz) * dRz);
+      js.P3 = Cosd(rz) * dPx - px * Sind(rz) * dRz + Sind(rz) * dPy + py * Cosd(rz) * dRz + ltx * Sind(ry) * dRy + ltz * Cosd(ry) * dRy;
+      js.P4 = -dPz - ltx * Cosd(ry) * dRy + ltz * Sind(ry) * dRy;
+
+      js.R1 = std::round(js.R1 * 100) / 100;
+      js.R5 = std::round(js.R5 * 100) / 100;
+      js.P2 = std::round(js.P2 * 100) / 100;
+      js.P3 = std::round(js.P3 * 100) / 100;
+      js.P4 = std::round(js.P4 * 100) / 100;
+
+      return js;
+  }
+
+  static JointSpace InverseDifferential_Fast(const TaskSpace &deltaSpace, const TaskSpace &currentSpace) {
+      JointSpace js;
+
+      double dRz = deltaSpace.Rz;
+      double dRy = deltaSpace.Ry;
+      double dPx = deltaSpace.Px;
+      double dPy = deltaSpace.Py;
+      double dPz = deltaSpace.Pz;
+
+      double rz = currentSpace.Rz;
+      double ry = currentSpace.Ry;
+      double px = currentSpace.Px;
+      double py = currentSpace.Py;
+      double pz = currentSpace.Pz;
+
+      // TODO: 有点问题，需要确认
+      // js.R1 = dRz;
+      // js.R5 = -dRy;
+      // js.P2 = rz * dPx + px * dRz - (dPy - py * rz * dRz);
+      // js.P3 = dPx - px * rz * dRz + rz * dPy + py * dRz + ltx * ry * dRy + ltz * dRy;
+      // js.P4 = -dPz - ltx * dRy + ltz * ry * dRy;
+
+      js.R1 = std::round(js.R1 * 100) / 100;
+      js.R5 = std::round(js.R5 * 100) / 100;
+      js.P2 = std::round(js.P2 * 100) / 100;
+      js.P3 = std::round(js.P3 * 100) / 100;
+      js.P4 = std::round(js.P4 * 100) / 100;
+
+      throw std::runtime_error("Not implemented");
+
+      return js;
   }
 
   static bool CheckJoint(const JointSpace &js) {
