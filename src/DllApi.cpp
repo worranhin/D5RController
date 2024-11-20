@@ -9,9 +9,20 @@
     return ErrorCode::SystemError;                                             \
   }
 
-ErrorCode CreateD5RobotInstance(D5Robot *&instance, const char *serialPort,
-                                const char *natorID, uint8_t topRMDID,
-                                uint8_t bottomRMDID, const char *upCameraID) {
+ErrorCode CreateD5RobotInstance(D5Robot *&instance, const char *serialPort) {
+  try {
+    instance = new D5Robot(serialPort);
+    return ErrorCode::OK;
+  } catch (const RobotException &e) {
+    return e.code;
+  } catch (...) {
+    return ErrorCode::CreateInstanceError;
+  }
+}
+
+ErrorCode CreateD5RobotInstance2(D5Robot *&instance, const char *serialPort,
+                                 const char *natorID, uint8_t topRMDID,
+                                 uint8_t bottomRMDID, const char *upCameraID) {
   try {
     instance =
         new D5Robot(serialPort, natorID, topRMDID, bottomRMDID, upCameraID);
