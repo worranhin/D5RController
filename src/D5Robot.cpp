@@ -106,10 +106,10 @@ Joints D5Robot::GetCurrentJoint() {
 }
 
 TaskSpace D5Robot::GetCurrentPose() {
-  auto joint = GetCurrentJoint();
-  JointSpace js(joint);
-  auto ts = KineHelper::Forward(js);
-  return ts;
+    auto joint = GetCurrentJoint();
+    JointSpace js(joint);
+    auto ts = KineHelper::Forward(js);
+    return ts;
 }
 
 // Points D5Robot::FwKine(const Joints j) {
@@ -144,17 +144,17 @@ bool D5Robot::VCJawChange() {
         return false;
     }
     // 初始化夹钳位置 -- 根据目标钳口库选择
-    if (!JointsMoveAbsolute(JAWPOINT)) {
-        throw RobotException(ErrorCode::D5RMoveError);
-        return false;
-    }
+    // if (!JointsMoveAbsolute(JAWPOINT)) {
+    //     throw RobotException(ErrorCode::D5RMoveError);
+    //     return false;
+    // }
 
-    /* 需要延时么 */
+    // /* 需要延时么 */
 
-    /* 第二个相机移动z轴 */
+    // /* 第二个相机移动z轴 */
 
-    // 获取钳口模板
-    upCamera.GetJawModel(img);
+    // // 获取钳口模板
+    // upCamera.GetJawModel(img);
     // 初始化误差
     std::vector<double> posError = upCamera.GetPhysicError();
 
