@@ -129,21 +129,20 @@ public:
       double py = currentSpace.Py;
       double pz = currentSpace.Pz;
 
-      //   js.R1 = deltaSpace.Rz;
-      //   js.R5 = -deltaSpace.Ry;
-      //   js.P2 = Sind(currentSpace.Rz) * deltaSpace.Px + currentSpace.Px * Cosd(currentSpace.Rz) * deltaSpace.Rz
-
-      js.R1 = dRz;
-      js.R5 = -dRy;
-      js.P2 = rz * dPx + px * dRz - (dPy - py * rz * dRz);
-      js.P3 = dPx - px * rz * dRz + rz * dPy + py * dRz + ltx * ry * dRy + ltz * dRy;
-      js.P4 = -dPz - ltx * dRy + ltz * ry * dRy;
+      // TODO: 有点问题，需要确认
+      // js.R1 = dRz;
+      // js.R5 = -dRy;
+      // js.P2 = rz * dPx + px * dRz - (dPy - py * rz * dRz);
+      // js.P3 = dPx - px * rz * dRz + rz * dPy + py * dRz + ltx * ry * dRy + ltz * dRy;
+      // js.P4 = -dPz - ltx * dRy + ltz * ry * dRy;
 
       js.R1 = std::round(js.R1 * 100) / 100;
       js.R5 = std::round(js.R5 * 100) / 100;
       js.P2 = std::round(js.P2 * 100) / 100;
       js.P3 = std::round(js.P3 * 100) / 100;
       js.P4 = std::round(js.P4 * 100) / 100;
+
+      throw std::runtime_error("Not implemented");
 
       return js;
   }
