@@ -80,6 +80,40 @@ public:
     return js;
   }
 
+  static JointSpace InverseDifferential(const TaskSpace &deltaSpace, const TaskSpace &currentSpace) {
+      JointSpace js;
+
+      double dRz = deltaSpace.Rz;
+      double dRy = deltaSpace.Ry;
+      double dPx = deltaSpace.Px;
+      double dPy = deltaSpace.Py;
+      double dPz = deltaSpace.Pz;
+
+      double rz = currentSpace.Rz;
+      double ry = currentSpace.Ry;
+      double px = currentSpace.Px;
+      double py = currentSpace.Py;
+      double pz = currentSpace.Pz;
+
+      //   js.R1 = deltaSpace.Rz;
+      //   js.R5 = -deltaSpace.Ry;
+      //   js.P2 = Sind(currentSpace.Rz) * deltaSpace.Px + currentSpace.Px * Cosd(currentSpace.Rz) * deltaSpace.Rz
+
+      js.R1 = dRz;
+      js.R5 = -dRy;
+      js.P2 = Sind(rz) * dPx + px * Cosd(rz) * dRz - (Cosd(rz) * dPy - py * Sind(rz) * dRz);
+      js.P3 = Cosd(rz) * dPx - px * Sind(rz) * dRz + Sind(rz) * dPy + py * Cosd(rz) * dRz + ltx * Sind(ry) * dRy + ltz * Cosd(ry) * dRy;
+      js.P4 = -dPz - ltx * Cosd(ry) * dRy + ltz * Sind(ry) * dRy;
+
+      js.R1 = std::round(js.R1 * 100) / 100;
+      js.R5 = std::round(js.R5 * 100) / 100;
+      js.P2 = std::round(js.P2 * 100) / 100;
+      js.P3 = std::round(js.P3 * 100) / 100;
+      js.P4 = std::round(js.P4 * 100) / 100;
+
+      return js;
+  }
+
   static bool CheckJoint(const JointSpace &js) {
     bool good1 = js.R1 >= _R1min && js.R1 <= _R1max;
     bool good2 = js.P2 >= _P2min && js.P2 <= _P2max;
