@@ -31,4 +31,7 @@ add_library(Camera CameraUP.cpp)
 target_link_libraries(Camera Galaxy)
 
 # add_executable(Test test.cpp)
-# target_link_libraries(Test CameraUP)
+# target_link_libraries(Test Camera)
+# target_link_libraries(Test Galaxy)
+# target_link_libraries(Test GalaxySDK)
+# target_include_directories(Test PUBLIC "../../include")
