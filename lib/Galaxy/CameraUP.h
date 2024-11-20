@@ -7,6 +7,8 @@ struct Model {
   cv::Mat img;
   cv::Point2f center;
   cv::Point2f point;
+  std::vector<cv::KeyPoint> keypoints;
+  cv::Mat descriptors;
 };
 
 enum ModelType { JAW = 0, CLAMP = 1 };
