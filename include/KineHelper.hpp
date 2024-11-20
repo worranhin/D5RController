@@ -11,189 +11,189 @@
 namespace D5R {
 
 class KineHelper {
-private:
-  inline static const double l1 = 38.0;
-  inline static const double l2 = 11.5 + 1.5;
-  inline static const double l3 = 17.25;
-  inline static const double l4 = 28.0;
-  inline static const double l5 = 29.0;
-  inline static const double ltx = 72.9;
-  inline static const double lty = 42.5;
-  inline static const double ltz = 9.46;
+  private:
+    inline static const double l1 = 38.0;
+    inline static const double l2 = 11.5 + 1.5;
+    inline static const double l3 = 17.25;
+    inline static const double l4 = 28.0;
+    inline static const double l5 = 29.0;
+    inline static const double ltx = 72.9;
+    inline static const double lty = 42.5;
+    inline static const double ltz = 9.46;
 
-  inline static const double _R1min = -90.0, _R1max = 90.0;
-  inline static const double _R5min = -45.0, _R5max = 90.0;
-  inline static const double _P2min = -15.0, _P2max = 15.0;
-  inline static const double _P3min = -15.0, _P3max = 15.0;
-  inline static const double _P4min = -15.0, _P4max = 15.0;
+    inline static const double _R1min = -90.0, _R1max = 90.0;
+    inline static const double _R5min = -45.0, _R5max = 90.0;
+    inline static const double _P2min = -15.0, _P2max = 15.0;
+    inline static const double _P3min = -15.0, _P3max = 15.0;
+    inline static const double _P4min = -15.0, _P4max = 15.0;
 
-public:
-  static TaskSpace Forward(const JointSpace &space) {
-    double m1 = l3 + l5 + lty + space.P2;
+  public:
+    static TaskSpace Forward(const JointSpace &space) {
+        double m1 = l3 + l5 + lty + space.P2;
 
-    if (!CheckJoint(space)) {
-        throw std::out_of_range("In KineHelper::Forward: Joint out of range.");
+        if (!CheckJoint(space)) {
+            throw std::out_of_range("In KineHelper::Forward: Joint out of range.");
+        }
+
+        TaskSpace ts;
+        ts.Px = m1 * Sind(space.R1) + space.P3 * Cosd(space.R1) +
+                ltx * Cosd(space.R1) * Cosd(space.R5) +
+                ltz * Cosd(space.R1) * Sind(space.R5);
+
+        ts.Py = space.P3 * Sind(space.R1) - m1 * Cosd(space.R1) +
+                ltx * Sind(space.R1) * Cosd(space.R5) +
+                ltz * Sind(space.R1) * Sind(space.R5);
+
+        ts.Pz =
+            ltx * Sind(space.R5) - ltz * Cosd(space.R5) - space.P4 - (l1 + l2 + l4);
+
+        ts.Ry = -space.R5;
+        ts.Rz = space.R1;
+
+        ts.Px = std::round(ts.Px * 100) / 100;
+        ts.Py = std::round(ts.Py * 100) / 100;
+        ts.Pz = std::round(ts.Pz * 100) / 100;
+        ts.Ry = std::round(ts.Ry * 100) / 100;
+        ts.Rz = std::round(ts.Rz * 100) / 100;
+
+        return ts;
     }
 
-    TaskSpace ts;
-    ts.Px = m1 * Sind(space.R1) + space.P3 * Cosd(space.R1) +
-            ltx * Cosd(space.R1) * Cosd(space.R5) +
-            ltz * Cosd(space.R1) * Sind(space.R5);
+    static JointSpace Inverse(const TaskSpace &space) {
+        double m1 = l3 + l5 + lty;
 
-    ts.Py = space.P3 * Sind(space.R1) - m1 * Cosd(space.R1) +
-            ltx * Sind(space.R1) * Cosd(space.R5) +
-            ltz * Sind(space.R1) * Sind(space.R5);
+        JointSpace js;
+        js.R1 = space.Rz;
+        js.R5 = -space.Ry;
+        js.P2 = space.Px * Sind(space.Rz) - space.Py * Cosd(space.Rz) - m1;
+        js.P3 = space.Px * Cosd(space.Rz) + space.Py * Sind(space.Rz) -
+                ltx * Cosd(-space.Ry) - ltz * Sind(-space.Ry);
+        js.P4 = -space.Pz + ltx * Sind(-space.Ry) - ltz * Cosd(-space.Ry) -
+                (l1 + l2 + l4);
 
-    ts.Pz =
-        ltx * Sind(space.R5) - ltz * Cosd(space.R5) - space.P4 - (l1 + l2 + l4);
+        js.R1 = std::round(js.R1 * 100) / 100;
+        js.R5 = std::round(js.R5 * 100) / 100;
+        js.P2 = std::round(js.P2 * 100) / 100;
+        js.P3 = std::round(js.P3 * 100) / 100;
+        js.P4 = std::round(js.P4 * 100) / 100;
 
-    ts.Ry = -space.R5;
-    ts.Rz = space.R1;
+        return js;
+    }
 
-    ts.Px = std::round(ts.Px * 100) / 100;
-    ts.Py = std::round(ts.Py * 100) / 100;
-    ts.Pz = std::round(ts.Pz * 100) / 100;
-    ts.Ry = std::round(ts.Ry * 100) / 100;
-    ts.Rz = std::round(ts.Rz * 100) / 100;
+    static JointSpace InverseDifferential(const TaskSpace &deltaSpace, const TaskSpace &currentSpace) {
+        JointSpace js;
 
-    return ts;
-  }
+        double dRz = deltaSpace.Rz;
+        double dRy = deltaSpace.Ry;
+        double dPx = deltaSpace.Px;
+        double dPy = deltaSpace.Py;
+        double dPz = deltaSpace.Pz;
 
-  static JointSpace Inverse(const TaskSpace &space) {
-    double m1 = l3 + l5 + lty;
+        double rz = currentSpace.Rz;
+        double ry = currentSpace.Ry;
+        double px = currentSpace.Px;
+        double py = currentSpace.Py;
+        double pz = currentSpace.Pz;
 
-    JointSpace js;
-    js.R1 = space.Rz;
-    js.R5 = -space.Ry;
-    js.P2 = space.Px * Sind(space.Rz) - space.Py * Cosd(space.Rz) - m1;
-    js.P3 = space.Px * Cosd(space.Rz) + space.Py * Sind(space.Rz) -
-            ltx * Cosd(-space.Ry) - ltz * Sind(-space.Ry);
-    js.P4 = -space.Pz + ltx * Sind(-space.Ry) - ltz * Cosd(-space.Ry) -
-            (l1 + l2 + l4);
+        //   js.R1 = deltaSpace.Rz;
+        //   js.R5 = -deltaSpace.Ry;
+        //   js.P2 = Sind(currentSpace.Rz) * deltaSpace.Px + currentSpace.Px * Cosd(currentSpace.Rz) * deltaSpace.Rz
 
-    js.R1 = std::round(js.R1 * 100) / 100;
-    js.R5 = std::round(js.R5 * 100) / 100;
-    js.P2 = std::round(js.P2 * 100) / 100;
-    js.P3 = std::round(js.P3 * 100) / 100;
-    js.P4 = std::round(js.P4 * 100) / 100;
+        js.R1 = dRz;
+        js.R5 = -dRy;
+        js.P2 = Sind(rz) * dPx + px * Cosd(rz) * dRz - (Cosd(rz) * dPy - py * Sind(rz) * dRz);
+        js.P3 = Cosd(rz) * dPx - px * Sind(rz) * dRz + Sind(rz) * dPy + py * Cosd(rz) * dRz + ltx * Sind(ry) * dRy + ltz * Cosd(ry) * dRy;
+        js.P4 = -dPz - ltx * Cosd(ry) * dRy + ltz * Sind(ry) * dRy;
 
-    return js;
-  }
+        js.R1 = std::round(js.R1 * 100) / 100;
+        js.R5 = std::round(js.R5 * 100) / 100;
+        js.P2 = std::round(js.P2 * 10000) / 10000;
+        js.P3 = std::round(js.P3 * 10000) / 10000;
+        js.P4 = std::round(js.P4 * 10000) / 10000;
 
-  static JointSpace InverseDifferential(const TaskSpace &deltaSpace, const TaskSpace &currentSpace) {
-      JointSpace js;
+        return js;
+    }
 
-      double dRz = deltaSpace.Rz;
-      double dRy = deltaSpace.Ry;
-      double dPx = deltaSpace.Px;
-      double dPy = deltaSpace.Py;
-      double dPz = deltaSpace.Pz;
+    static JointSpace InverseDifferential_Fast(const TaskSpace &deltaSpace, const TaskSpace &currentSpace) {
+        JointSpace js;
 
-      double rz = currentSpace.Rz;
-      double ry = currentSpace.Ry;
-      double px = currentSpace.Px;
-      double py = currentSpace.Py;
-      double pz = currentSpace.Pz;
+        double dRz = deltaSpace.Rz;
+        double dRy = deltaSpace.Ry;
+        double dPx = deltaSpace.Px;
+        double dPy = deltaSpace.Py;
+        double dPz = deltaSpace.Pz;
 
-      //   js.R1 = deltaSpace.Rz;
-      //   js.R5 = -deltaSpace.Ry;
-      //   js.P2 = Sind(currentSpace.Rz) * deltaSpace.Px + currentSpace.Px * Cosd(currentSpace.Rz) * deltaSpace.Rz
+        double rz = currentSpace.Rz;
+        double ry = currentSpace.Ry;
+        double px = currentSpace.Px;
+        double py = currentSpace.Py;
+        double pz = currentSpace.Pz;
 
-      js.R1 = dRz;
-      js.R5 = -dRy;
-      js.P2 = Sind(rz) * dPx + px * Cosd(rz) * dRz - (Cosd(rz) * dPy - py * Sind(rz) * dRz);
-      js.P3 = Cosd(rz) * dPx - px * Sind(rz) * dRz + Sind(rz) * dPy + py * Cosd(rz) * dRz + ltx * Sind(ry) * dRy + ltz * Cosd(ry) * dRy;
-      js.P4 = -dPz - ltx * Cosd(ry) * dRy + ltz * Sind(ry) * dRy;
+        // TODO: 有点问题，需要确认
+        // js.R1 = dRz;
+        // js.R5 = -dRy;
+        // js.P2 = rz * dPx + px * dRz - (dPy - py * rz * dRz);
+        // js.P3 = dPx - px * rz * dRz + rz * dPy + py * dRz + ltx * ry * dRy + ltz * dRy;
+        // js.P4 = -dPz - ltx * dRy + ltz * ry * dRy;
 
-      js.R1 = std::round(js.R1 * 100) / 100;
-      js.R5 = std::round(js.R5 * 100) / 100;
-      js.P2 = std::round(js.P2 * 100) / 100;
-      js.P3 = std::round(js.P3 * 100) / 100;
-      js.P4 = std::round(js.P4 * 100) / 100;
+        js.R1 = std::round(js.R1 * 100) / 100;
+        js.R5 = std::round(js.R5 * 100) / 100;
+        js.P2 = std::round(js.P2 * 100) / 100;
+        js.P3 = std::round(js.P3 * 100) / 100;
+        js.P4 = std::round(js.P4 * 100) / 100;
 
-      return js;
-  }
+        throw std::runtime_error("Not implemented");
 
-  static JointSpace InverseDifferential_Fast(const TaskSpace &deltaSpace, const TaskSpace &currentSpace) {
-      JointSpace js;
+        return js;
+    }
 
-      double dRz = deltaSpace.Rz;
-      double dRy = deltaSpace.Ry;
-      double dPx = deltaSpace.Px;
-      double dPy = deltaSpace.Py;
-      double dPz = deltaSpace.Pz;
+    static bool CheckJoint(const JointSpace &js) {
+        // bool good1 = js.R1 >= _R1min && js.R1 <= _R1max;
+        bool good2 = js.P2 >= _P2min && js.P2 <= _P2max;
+        bool good3 = js.P3 >= _P3min && js.P3 <= _P3max;
+        bool good4 = js.P4 >= _P4min && js.P4 <= _P4max;
+        // bool good5 = js.R5 >= _R5min && js.R5 <= _R5max;
 
-      double rz = currentSpace.Rz;
-      double ry = currentSpace.Ry;
-      double px = currentSpace.Px;
-      double py = currentSpace.Py;
-      double pz = currentSpace.Pz;
+        return good2 && good3 && good4;
+    }
 
-      // TODO: 有点问题，需要确认
-      // js.R1 = dRz;
-      // js.R5 = -dRy;
-      // js.P2 = rz * dPx + px * dRz - (dPy - py * rz * dRz);
-      // js.P3 = dPx - px * rz * dRz + rz * dPy + py * dRz + ltx * ry * dRy + ltz * dRy;
-      // js.P4 = -dPz - ltx * dRy + ltz * ry * dRy;
+    static JointSpace ClipJoint(const JointSpace &js) {
+        JointSpace clipped;
+        clipped.R1 = std::clamp(js.R1, _R1min, _R1max);
+        clipped.P2 = std::clamp(js.P2, _P2min, _P2max);
+        clipped.P3 = std::clamp(js.P3, _P3min, _P3max);
+        clipped.P4 = std::clamp(js.P4, _P4min, _P4max);
+        clipped.R5 = std::clamp(js.R5, _R5min, _R5max);
 
-      js.R1 = std::round(js.R1 * 100) / 100;
-      js.R5 = std::round(js.R5 * 100) / 100;
-      js.P2 = std::round(js.P2 * 100) / 100;
-      js.P3 = std::round(js.P3 * 100) / 100;
-      js.P4 = std::round(js.P4 * 100) / 100;
+        return clipped;
+    }
 
-      throw std::runtime_error("Not implemented");
+    static bool CheckJoint(const JointSpace &js, bool which[5]) {
+        bool good1 = js.R1 >= _R1min && js.R1 <= _R1max;
+        bool good2 = js.P2 >= _P2min && js.P2 <= _P2max;
+        bool good3 = js.P3 >= _P3min && js.P3 <= _P3max;
+        bool good4 = js.P4 >= _P4min && js.P4 <= _P4max;
+        bool good5 = js.R5 >= _R5min && js.R5 <= _R5max;
 
-      return js;
-  }
+        which[0] = good1;
+        which[1] = good2;
+        which[2] = good3;
+        which[3] = good4;
+        which[4] = good5;
 
-  static bool CheckJoint(const JointSpace &js) {
-    bool good1 = js.R1 >= _R1min && js.R1 <= _R1max;
-    bool good2 = js.P2 >= _P2min && js.P2 <= _P2max;
-    bool good3 = js.P3 >= _P3min && js.P3 <= _P3max;
-    bool good4 = js.P4 >= _P4min && js.P4 <= _P4max;
-    bool good5 = js.R5 >= _R5min && js.R5 <= _R5max;
+        return good1 && good2 && good3 && good4 && good5;
+    }
 
-    return good1 && good2 && good3 && good4 && good5;
-  }
+  private:
+    static double Cosd(double x) {
+        using namespace std::numbers;
+        return std::cos(x * pi / 180.0);
+    }
 
-  static JointSpace ClipJoint(const JointSpace &js) {
-    JointSpace clipped;
-    clipped.R1 = std::clamp(js.R1, _R1min, _R1max);
-    clipped.P2 = std::clamp(js.P2, _P2min, _P2max);
-    clipped.P3 = std::clamp(js.P3, _P3min, _P3max);
-    clipped.P4 = std::clamp(js.P4, _P4min, _P4max);
-    clipped.R5 = std::clamp(js.R5, _R5min, _R5max);
-
-    return clipped;
-  }
-
-  static bool CheckJoint(const JointSpace &js, bool which[5]) {
-    bool good1 = js.R1 >= _R1min && js.R1 <= _R1max;
-    bool good2 = js.P2 >= _P2min && js.P2 <= _P2max;
-    bool good3 = js.P3 >= _P3min && js.P3 <= _P3max;
-    bool good4 = js.P4 >= _P4min && js.P4 <= _P4max;
-    bool good5 = js.R5 >= _R5min && js.R5 <= _R5max;
-
-    which[0] = good1;
-    which[1] = good2;
-    which[2] = good3;
-    which[3] = good4;
-    which[4] = good5;
-
-    return good1 && good2 && good3 && good4 && good5;
-  }
-
-private:
-  static double Cosd(double x) {
-    using namespace std::numbers;
-    return std::cos(x * pi / 180.0);
-  }
-
-  static double Sind(double x) {
-    using namespace std::numbers;
-    return std::sin(x * pi / 180.0);
-  }
+    static double Sind(double x) {
+        using namespace std::numbers;
+        return std::sin(x * pi / 180.0);
+    }
 };
 
 } // namespace D5R

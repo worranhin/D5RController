@@ -18,7 +18,6 @@ target_link_libraries(D5Robot PUBLIC RMDMotor)
 target_link_libraries(D5Robot PUBLIC NatorMotor)
 target_link_libraries(D5Robot PUBLIC Camera)
 
-
 add_library(D5RbotApi SHARED src/DllApi.cpp)
 target_include_directories(D5RbotApi PUBLIC "${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include")
 target_link_libraries(D5RbotApi D5Robot)
@@ -30,3 +29,4 @@ target_link_libraries(test D5RbotApi)
 
 add_executable(TestKineHelper "test/TestKineHelper.cpp")
 target_include_directories(TestKineHelper PUBLIC "${PROJECT_SOURCE_DIR}/include")
+target_link_libraries(TestKineHelper D5Robot)

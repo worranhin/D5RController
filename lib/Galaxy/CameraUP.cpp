@@ -8,23 +8,24 @@ namespace D5R {
  */
 CameraUP::CameraUP(std::string id) : GxCamera(id) {
     // 夹钳模板
-    _clamp.img = cv::imread("./image/model/clamp.png", 0);
+
+    _clamp.img = cv::imread("E:/WYL_workspace/D5RC/lib/Galaxy/image/model/clamp.png", 0);
     _clamp.center = cv::Point2f(448, 63);
     _clamp.point = cv::Point2f(445.8, 101);
-    cv::FileStorage fs1("./image/yml/KeyPoints_Clamp.yml", cv::FileStorage::READ);
+    cv::FileStorage fs1("E:/WYL_workspace/D5RC/lib/Galaxy/image/yml/KeyPoints_Clamp.yml", cv::FileStorage::READ);
     fs1["keypoints"] >> _clamp.keypoints;
     fs1.release();
-    cv::FileStorage fs2("./image/yml/Descriptors_Clamp.yml", cv::FileStorage::READ);
+    cv::FileStorage fs2("E:/WYL_workspace/D5RC/lib/Galaxy/image/yml/Descriptors_Clamp.yml", cv::FileStorage::READ);
     fs2["descriptors"] >> _clamp.descriptors;
     fs2.release();
     // 钳口模板
-    _jaw.img = cv::imread("./image/model/jaw.png", 0);
+    _jaw.img = cv::imread("E:/WYL_workspace/D5RC/lib/Galaxy/image/model/jaw.png", 0);
     _jaw.center = cv::Point2f(308.277, 407.184);
     _jaw.point = cv::Point2f(304.042, 45.0638);
-    cv::FileStorage fs3("./image/yml/KeyPoints_Jaw.yml", cv::FileStorage::READ);
+    cv::FileStorage fs3("E:/WYL_workspace/D5RC/lib/Galaxy/image/yml/KeyPoints_Jaw.yml", cv::FileStorage::READ);
     fs3["keypoints"] >> _jaw.keypoints;
     fs3.release();
-    cv::FileStorage fs4("./image/yml/Descriptors_Jaw.yml", cv::FileStorage::READ);
+    cv::FileStorage fs4("E:/WYL_workspace/D5RC/lib/Galaxy/image/yml/Descriptors_Jaw.yml", cv::FileStorage::READ);
     fs4["descriptors"] >> _jaw.descriptors;
     fs4.release();
 
@@ -197,12 +198,12 @@ std::vector<std::vector<float>> CameraUP::GetPixelPos() {
         atan2f(pos_clamp[0].y - pos_clamp[1].y, pos_clamp[0].x - pos_clamp[1].x) * (-180) / CV_PI;
     pos.push_back({pos_clamp[0].x, pos_clamp[0].y, angle_jaw});
 
-    cv::line(img, pos_jaw[0] + roiP, pos_jaw[1] + roiP, cv::Scalar(0), 2);
-    cv::line(img, pos_clamp[0] + roiP, pos_clamp[1] + roiP, cv::Scalar(0), 2);
+    cv::line(img, pos_jaw[0] + roiP, pos_jaw[1] + roiP, cv::Scalar(0), 4);
+    cv::line(img, pos_clamp[0] + roiP, pos_clamp[1] + roiP, cv::Scalar(0), 4);
     cv::putText(img, std::to_string(angle_jaw), pos_jaw[1] + roiP,
-                cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0));
+                cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0), 4);
     cv::putText(img, std::to_string(angle_clamp), pos_clamp[0] + roiP,
-                cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0));
+                cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0), 4);
     std::string windowname = "image";
     cv::namedWindow(windowname, cv::WINDOW_NORMAL);
     cv::resizeWindow(windowname, cv::Size(1295, 1024));

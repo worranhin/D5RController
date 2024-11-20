@@ -7,24 +7,28 @@ namespace D5R {
 
 class TaskSpace {
 
-public:
-  double Px;
-  double Py;
-  double Pz;
-  double Ry;
-  double Rz;
+  public:
+    double Px;
+    double Py;
+    double Pz;
+    double Ry;
+    double Rz;
 
-  TaskSpace operator+= (const TaskSpace &rhs) {
-    this->Px += rhs.Px;
-    this->Py += rhs.Py;
-    this->Pz += rhs.Pz;
-    this->Ry += rhs.Ry;
-    this->Rz += rhs.Rz;
+    TaskSpace operator+(const TaskSpace &rhs) {
+        return TaskSpace(*this) += rhs;
+    }
 
-    return *this;
-  }
+    TaskSpace operator+=(const TaskSpace &rhs) {
+        this->Px += rhs.Px;
+        this->Py += rhs.Py;
+        this->Pz += rhs.Pz;
+        this->Ry += rhs.Ry;
+        this->Rz += rhs.Rz;
 
-  // JointSpace ToJointSpace() { KineHelper::Inverse(*this); }
+        return *this;
+    }
+
+    // JointSpace ToJointSpace() { KineHelper::Inverse(*this); }
 };
 
 } // namespace D5R

@@ -13,6 +13,7 @@ enum ErrorCode {
     SerialSendError = 203,
     SerialReceiveError,
     SerialReceiveError_LessThanExpected,
+    SerialClearBufferError,
     NatorError = 300,
     NatorInitError = 301,
     RMDError = 400,
