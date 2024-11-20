@@ -23,16 +23,16 @@ private:
 
   inline static const double _R1min = -90.0, _R1max = 90.0;
   inline static const double _R5min = -45.0, _R5max = 90.0;
-  inline static const double _P2min = -12.0, _P2max = 12.0;
-  inline static const double _P3min = -12.0, _P3max = 12.0;
-  inline static const double _P4min = -12.0, _P4max = 12.0;
+  inline static const double _P2min = -15.0, _P2max = 15.0;
+  inline static const double _P3min = -15.0, _P3max = 15.0;
+  inline static const double _P4min = -15.0, _P4max = 15.0;
 
 public:
   static TaskSpace Forward(const JointSpace &space) {
     double m1 = l3 + l5 + lty + space.P2;
 
     if (!CheckJoint(space)) {
-      throw std::out_of_range("Joint out of range.");
+        throw std::out_of_range("In KineHelper::Forward: Joint out of range.");
     }
 
     TaskSpace ts;

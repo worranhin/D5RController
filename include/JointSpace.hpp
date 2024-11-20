@@ -30,6 +30,17 @@ public:
     R5 = r5;
   }
 
+  JointSpace operator+(const JointSpace &rhs) const { return JointSpace(*this) += rhs; }
+
+  JointSpace operator+=(const JointSpace &rhs) {
+    R1 += rhs.R1;
+    P2 += rhs.P2;
+    P3 += rhs.P3;
+    P4 += rhs.P4;
+    R5 += rhs.R5;
+    return *this;
+  }
+
   Joints ToControlJoint() {
     Joints j;
     j.r1 = R1 * 100;
