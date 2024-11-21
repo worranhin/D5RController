@@ -1,3 +1,4 @@
+#include "D5Robot.h"
 #include "KineHelper.hpp"
 #include <iostream>
 
@@ -52,14 +53,62 @@ int main() {
 
     return 0;
 
-    // for (int i = 0; i < 50; i++) {
+    D5R::D5Robot robot("\\\\.\\COM16");
+
+    for (int i = 0; i < 10; i++) {
+        std::cout << "Round: " << i + 1 << std::endl;
+
+        // 打印目前状态
+        auto joint = robot.GetCurrentJoint();
+        currentJointSpace.FromControlJoint(joint);
+        std::cout << "currentJointSpace before move: ";
+        printSpace(currentJointSpace);
+        currentTaskSpace = KineHelper::Forward(currentJointSpace);
+        std::cout << "currentTaskSpace before move: ";
+        printSpace(currentTaskSpace);
+
+        // 计算逆解
+        auto targetTaskSpace = currentTaskSpace + deltaTaskSpace;
+        auto targetJointSpace = D5R::KineHelper::Inverse(currentTaskSpace);
+        std::cout << "deltaTaskSpace: ";
+        printSpace(targetTaskSpace);
+        std::cout << "deltaJointSpace: ";
+        printSpace(targetJointSpace);
+
+        // 移动
+        
+        // auto afterJs = currentJointSpace + deltaJointSpace;
+        if (KineHelper::CheckJoint(targetJointSpace)) {
+            robot.JointsMoveAbsolute(targetJointSpace.ToControlJoint());
+            // currentJointSpace = afterJs;
+            // currentTaskSpace = KineHelper::Forward(currentJointSpace);
+        } else {
+            std::cerr << "Joint out of range." << std::endl;
+            break;
+        }
+
+        // 打印移动后状态
+        Sleep(3000);
+        joint = robot.GetCurrentJoint();
+        currentJointSpace.FromControlJoint(joint);
+        currentTaskSpace = KineHelper::Forward(currentJointSpace);
+        std::cout << "currentTaskSpace after move: ";
+        printSpace(currentTaskSpace);
+        std::cout << "currentJointSpace after move: ";
+        printSpace(currentJointSpace) << std::endl;
+    }
+
+        // for (int i = 0; i < 10; i++) {
     //     std::cout << "Round: " << i + 1 << std::endl;
 
     //     // 打印目前状态
-    //     std::cout << "currentTaskSpace before move: ";
-    //     printSpace(currentTaskSpace);
+    //     auto joint = robot.GetCurrentJoint();
+    //     currentJointSpace.FromControlJoint(joint);
     //     std::cout << "currentJointSpace before move: ";
     //     printSpace(currentJointSpace);
+    //     currentTaskSpace = KineHelper::Forward(currentJointSpace);
+    //     std::cout << "currentTaskSpace before move: ";
+    //     printSpace(currentTaskSpace);
 
     //     // 计算微分逆解
     //     auto deltaJointSpace = D5R::KineHelper::InverseDifferential(deltaTaskSpace, currentTaskSpace);
@@ -71,14 +120,19 @@ int main() {
     //     // 模拟移动
     //     auto afterJs = currentJointSpace + deltaJointSpace;
     //     if (KineHelper::CheckJoint(afterJs)) {
-    //         currentJointSpace = afterJs;
-    //         currentTaskSpace = KineHelper::Forward(currentJointSpace);
+    //         robot.JointsMoveRelative(deltaJointSpace.ToControlJoint());
+    //         // currentJointSpace = afterJs;
+    //         // currentTaskSpace = KineHelper::Forward(currentJointSpace);
     //     } else {
     //         std::cerr << "Joint out of range." << std::endl;
     //         break;
     //     }
 
     //     // 打印移动后状态
+    //     Sleep(3000);
+    //     joint = robot.GetCurrentJoint();
+    //     currentJointSpace.FromControlJoint(joint);
+    //     currentTaskSpace = KineHelper::Forward(currentJointSpace);
     //     std::cout << "currentTaskSpace after move: ";
     //     printSpace(currentTaskSpace);
     //     std::cout << "currentJointSpace after move: ";

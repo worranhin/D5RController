@@ -7,15 +7,28 @@ namespace D5R {
  * @param id 相机的Mac地址
  */
 CameraUP::CameraUP(std::string id) : GxCamera(id) {
-    _clamp.img = cv::imread("./image/model/clamp.png", 0);
+    // 夹钳模板
+
+    _clamp.img = cv::imread("E:/WYL_workspace/D5RC/lib/Galaxy/image/model/clamp.png", 0);
     _clamp.center = cv::Point2f(448, 63);
     _clamp.point = cv::Point2f(445.8, 101);
-    cv::FileStorage fs1("./image/yml/KeyPoints_Clamp.yml", cv::FileStorage::READ);
+    cv::FileStorage fs1("E:/WYL_workspace/D5RC/lib/Galaxy/image/yml/KeyPoints_Clamp.yml", cv::FileStorage::READ);
     fs1["keypoints"] >> _clamp.keypoints;
     fs1.release();
-    cv::FileStorage fs2("./image/yml/Descriptors_Clamp.yml", cv::FileStorage::READ);
+    cv::FileStorage fs2("E:/WYL_workspace/D5RC/lib/Galaxy/image/yml/Descriptors_Clamp.yml", cv::FileStorage::READ);
     fs2["descriptors"] >> _clamp.descriptors;
     fs2.release();
+    // 钳口模板
+    _jaw.img = cv::imread("E:/WYL_workspace/D5RC/lib/Galaxy/image/model/jaw.png", 0);
+    _jaw.center = cv::Point2f(308.277, 407.184);
+    _jaw.point = cv::Point2f(304.042, 45.0638);
+    cv::FileStorage fs3("E:/WYL_workspace/D5RC/lib/Galaxy/image/yml/KeyPoints_Jaw.yml", cv::FileStorage::READ);
+    fs3["keypoints"] >> _jaw.keypoints;
+    fs3.release();
+    cv::FileStorage fs4("E:/WYL_workspace/D5RC/lib/Galaxy/image/yml/Descriptors_Jaw.yml", cv::FileStorage::READ);
+    fs4["descriptors"] >> _jaw.descriptors;
+    fs4.release();
+
     _mapParam = 0.00945188;
 }
 
@@ -26,33 +39,35 @@ CameraUP::CameraUP(std::string id) : GxCamera(id) {
 CameraUP::~CameraUP() {}
 
 /**
- * @brief
- * 获取钳口模板，记录钳口模板的定位信息，并返回钳口的初始位置信息，用以初始化夹钳位置
+ * @brief 获取钳口模板，记录钳口模板的特征信息，
+ * 选择哪个模板，相机与机器人就挪到哪个模板对应的位置
+ * 该函数已荒废，仅供参考
  *
  * @param img 相机获取的图片，为灰度图
- * @param pst 钳口在像素坐标系下的位置信息，pst[0]:center;pst[1]:up positon
- * point
  *
- * @todo 需添加模板选择模块，输入需要的模板标签，ROI对应的模板区域并获取ROI信息
  */
 void CameraUP::GetJawModel(cv::Mat img) {
+    return;
+
     if (img.channels() != 1) {
         ERROR_("img should be gray type");
         return;
     }
-    // ROI区域--后续改成识别头顶的方块
+
     cv::Point2f roiP(850, 750);
     cv::Rect roi = cv::Rect(roiP, cv::Size(650, 850));
-    cv::Mat roiImg = img(roi);
+    cv::Mat roiImg = img(roi).clone();
     _jaw.img = roiImg.clone();
-    cv::Mat jaw = cv::Mat(img.size(), img.type(), cv::Scalar::all(255));
-    roiImg.copyTo(jaw(roi));
+    // SIFT特征提取
+    cv::Ptr<cv::SIFT> sift = cv::SIFT::create();
+    sift->detect(_jaw.img, _jaw.keypoints);
+    sift->compute(_jaw.img, _jaw.keypoints, _jaw.descriptors);
+
     // 图像处理
     cv::Mat jaw_binary;
-    cv::threshold(jaw, jaw_binary, 101, 255, cv::THRESH_BINARY);
+    cv::threshold(roiImg, jaw_binary, 101, 255, cv::THRESH_BINARY);
     cv::Mat jaw_Gauss;
-    cv::GaussianBlur(jaw_binary, jaw_Gauss, cv::Size(7, 7), 0, 0,
-                     cv::BORDER_DEFAULT);
+    cv::GaussianBlur(jaw_binary, jaw_Gauss, cv::Size(7, 7), 0, 0, cv::BORDER_DEFAULT);
     // Canny边缘检测
     cv::Mat edges;
     cv::Canny(jaw_Gauss, edges, 50, 150);
@@ -68,7 +83,6 @@ void CameraUP::GetJawModel(cv::Mat img) {
         }
         contours_1.insert(contours_1.end(), contour.begin(), contour.end());
     }
-
     // 凸包
     std::vector<cv::Point> hull;
     cv::convexHull(cv::Mat(contours_1), hull);
@@ -81,8 +95,8 @@ void CameraUP::GetJawModel(cv::Mat img) {
     cv::Point2f midPoint_up =
         0.5 * (rectPoints[shortindex] + rectPoints[(shortindex + 1) % 4]);
 
-    _jaw.center = rect.center - roiP;
-    _jaw.point = midPoint_up - roiP;
+    _jaw.center = rect.center;
+    _jaw.point = midPoint_up;
 }
 
 /**
@@ -101,14 +115,20 @@ void D5R::CameraUP::SIFT(cv::Mat image, ModelType modelname,
                          std::vector<cv::Point2f> &pst) {
     cv::Mat model;
     std::vector<cv::Point2f> modelPosition;
+    std::vector<cv::KeyPoint> keyPoints_Model;
+    cv::Mat descriptors_model;
     if (modelname == ModelType::CLAMP) {
         model = _clamp.img.clone();
         modelPosition.push_back(_clamp.center);
         modelPosition.push_back(_clamp.point);
+        keyPoints_Model = _clamp.keypoints;
+        descriptors_model = _clamp.descriptors;
     } else {
         model = _jaw.img.clone();
         modelPosition.push_back(_jaw.center);
         modelPosition.push_back(_jaw.point);
+        keyPoints_Model = _jaw.keypoints;
+        descriptors_model = _jaw.descriptors;
     }
     // ROI
     cv::Point2f roiP(800, 648);
@@ -116,13 +136,9 @@ void D5R::CameraUP::SIFT(cv::Mat image, ModelType modelname,
     cv::Mat ROI = image(roi).clone();
     // SIFT特征点
     cv::Ptr<cv::SIFT> sift = cv::SIFT::create();
-    std::vector<cv::KeyPoint> keyPoints_Model;
-    sift->detect(model, keyPoints_Model);
     std::vector<cv::KeyPoint> keyPoints_Img;
     sift->detect(ROI, keyPoints_Img);
     // 描述
-    cv::Mat descriptors_model;
-    sift->compute(model, keyPoints_Model, descriptors_model);
     cv::Mat descriptors_Img;
     sift->compute(ROI, keyPoints_Img, descriptors_Img);
     // 匹配
@@ -145,8 +161,8 @@ void D5R::CameraUP::SIFT(cv::Mat image, ModelType modelname,
     }
     cv::Mat homography = cv::findHomography(model_P, img_P, cv::RANSAC);
     cv::perspectiveTransform(modelPosition, pst, homography);
-    pst[0] += roiP;
-    pst[1] += roiP;
+    // pst[0] += roiP;
+    // pst[1] += roiP;
 }
 
 /**
@@ -163,11 +179,8 @@ double CameraUP::GetMapParam() { return _mapParam; }
  * jaw.center.y, jaw_angle}, {clamp.center.x, clamp.center.y, clamp_angle}}
  */
 std::vector<std::vector<float>> CameraUP::GetPixelPos() {
+    cv::Point2f roiP(800, 648);
     std::vector<std::vector<float>> pos;
-    if (_jaw.img.empty()) {
-        std::cerr << "Please run GetJawModel fun first" << std::endl;
-        return pos;
-    }
     Read(_img);
     if (_img.empty()) {
         std::cerr << "Failed to read img" << std::endl;
@@ -177,21 +190,20 @@ std::vector<std::vector<float>> CameraUP::GetPixelPos() {
     std::vector<cv::Point2f> pos_jaw;
     SIFT(img, JAW, pos_jaw);
     float angle_jaw =
-        atan2f(pos_jaw[1].y - pos_jaw[0].y, pos_jaw[1].x - pos_jaw[0].x) *
-        (-180) / CV_PI;
+        atan2f(pos_jaw[1].y - pos_jaw[0].y, pos_jaw[1].x - pos_jaw[0].x) * (-180) / CV_PI;
     pos.push_back({pos_jaw[0].x, pos_jaw[0].y, angle_jaw});
     std::vector<cv::Point2f> pos_clamp;
     SIFT(img, CLAMP, pos_clamp);
     float angle_clamp =
-        atan2f(pos_clamp[0].y - pos_clamp[1].y, pos_clamp[0].x - pos_clamp[1].x) *
-        (-180) / CV_PI;
+        atan2f(pos_clamp[0].y - pos_clamp[1].y, pos_clamp[0].x - pos_clamp[1].x) * (-180) / CV_PI;
     pos.push_back({pos_clamp[0].x, pos_clamp[0].y, angle_jaw});
-    cv::line(img, pos_jaw[0], pos_jaw[1], cv::Scalar(0), 2);
-    cv::line(img, pos_clamp[0], pos_clamp[1], cv::Scalar(0), 2);
-    cv::putText(img, std::to_string(angle_jaw), pos_jaw[1],
-                cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0));
-    cv::putText(img, std::to_string(angle_clamp), pos_clamp[0],
-                cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0));
+
+    cv::line(img, pos_jaw[0] + roiP, pos_jaw[1] + roiP, cv::Scalar(0), 4);
+    cv::line(img, pos_clamp[0] + roiP, pos_clamp[1] + roiP, cv::Scalar(0), 4);
+    cv::putText(img, std::to_string(angle_jaw), pos_jaw[1] + roiP,
+                cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0), 4);
+    cv::putText(img, std::to_string(angle_clamp), pos_clamp[0] + roiP,
+                cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0), 4);
     std::string windowname = "image";
     cv::namedWindow(windowname, cv::WINDOW_NORMAL);
     cv::resizeWindow(windowname, cv::Size(1295, 1024));

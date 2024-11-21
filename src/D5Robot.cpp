@@ -106,10 +106,10 @@ Joints D5Robot::GetCurrentJoint() {
 }
 
 TaskSpace D5Robot::GetCurrentPose() {
-  auto joint = GetCurrentJoint();
-  JointSpace js(joint);
-  auto ts = KineHelper::Forward(js);
-  return ts;
+    auto joint = GetCurrentJoint();
+    JointSpace js(joint);
+    auto ts = KineHelper::Forward(js);
+    return ts;
 }
 
 // Points D5Robot::FwKine(const Joints j) {
@@ -143,34 +143,16 @@ bool D5Robot::VCJawChange() {
         throw RobotException(ErrorCode::CameraReadError);
         return false;
     }
-    // 初始化夹钳位置 -- 根据目标钳口库选择
-    if (!JointsMoveAbsolute(JAWPOINT)) {
-        throw RobotException(ErrorCode::D5RMoveError);
-        return false;
-    }
 
-    /* 需要延时么 */
-
-    /* 第二个相机移动z轴 */
-
-    // 获取钳口模板
-    upCamera.GetJawModel(img);
-    // 初始化误差
     std::vector<double> posError = upCamera.GetPhysicError();
 
     // 插入PID
     TaskSpace pError{posError[0], posError[1], 0, 0, posError[2]};
     JointSpace jError{};
-    while (pError.Px > 0.01 && pError.Py > 0.01 && pError.Rz > 0.1) {
+    while (pError.Px > 0.1 && pError.Py > 0.1 && pError.Rz > 0.01) {
         pError.Py = 0.05 * pError.Py;
-        jError = KineHelper::Inverse(pError);
-        int jx = static_cast<int>(jError.P2 * 1000000);
-        int jy = static_cast<int>(jError.P3 * 1000000);
-        natorMotor.GoToPoint_R({jx, jy, 0});
-        int32_t speed =
-            static_cast<int32_t>(jError.R5 * 100000 / 20); // 需要计算匹配的时间
-        topRMDMotor.SpeedControl(speed);
-        Sleep(20);
+        jError = KineHelper::InverseDifferential(pError, GetCurrentPose());
+        JointsMoveRelative(jError.ToControlJoint());
         posError.clear();
         posError = upCamera.GetPhysicError();
         pError = {posError[0], posError[1], 0, 0, posError[2]};
