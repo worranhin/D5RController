@@ -18,8 +18,8 @@ int main() {
     // robot.Stop();
     // robot.JointsMoveAbsolute({300, 0, 0, -10000000, 0});
     // robot.JointsMoveAbsolute({0, 500000, 6000000, -7000000, 0});
-    // robot.JointsMoveAbsolute({300, -2500000, 2100000, -7000000, 0});  //别动
-
+    robot.JointsMoveAbsolute({300, -4000000, 1800000, -7000000, 0}); // 别动
+    // Sleep(5000);
     // int64 start = cv::getTickCount();
     // robot.upCamera.GetPixelPos();
     // int64 end = cv::getTickCount();
@@ -27,7 +27,7 @@ int main() {
     // std::cout << t << std::endl;
     // cv::waitKey(0);
 
-    // robot.VCJawChange();
+    robot.VCJawChange();
     // cv::waitKey(0);
 
     // cv::Mat img;

@@ -111,7 +111,7 @@ void CameraUP::GetJawModel(cv::Mat img) {
  * JAW在钳口库模板匹配时，需ROI区域，否则其他钳口会发生干扰，ROI区域由GetJawModel函数确定，建议为类内变量
  *
  */
-void D5R::CameraUP::SIFT(cv::Mat image, ModelType modelname,
+bool D5R::CameraUP::SIFT(cv::Mat image, ModelType modelname,
                          std::vector<cv::Point2f> &pst) {
     cv::Mat model;
     std::vector<cv::Point2f> modelPosition;
@@ -159,8 +159,15 @@ void D5R::CameraUP::SIFT(cv::Mat image, ModelType modelname,
         model_P.push_back(keyPoints_Model[match.queryIdx].pt);
         img_P.push_back(keyPoints_Img[match.trainIdx].pt);
     }
+
+    if(img_P.size() < 8){
+        return false;
+    }
+
     cv::Mat homography = cv::findHomography(model_P, img_P, cv::RANSAC);
+
     cv::perspectiveTransform(modelPosition, pst, homography);
+    return true;
     // pst[0] += roiP;
     // pst[1] += roiP;
 }
@@ -181,22 +188,31 @@ double CameraUP::GetMapParam() { return _mapParam; }
 std::vector<std::vector<float>> CameraUP::GetPixelPos() {
     cv::Point2f roiP(800, 648);
     std::vector<std::vector<float>> pos;
-    Read(_img);
-    if (_img.empty()) {
-        std::cerr << "Failed to read img" << std::endl;
-        return pos;
-    }
-    cv::Mat img = _img.clone();
+    // Read(_img);
+    // if (_img.empty()) {
+    //     std::cerr << "Failed to read img" << std::endl;
+    //     return pos;
+    // }
+    // int count = 0;
+    cv::Mat img;
+    Read(img);
     std::vector<cv::Point2f> pos_jaw;
-    SIFT(img, JAW, pos_jaw);
+    if(!SIFT(img, JAW, pos_jaw)){
+        Read(img);
+        SIFT(img, JAW, pos_jaw);
+    }
     float angle_jaw =
         atan2f(pos_jaw[1].y - pos_jaw[0].y, pos_jaw[1].x - pos_jaw[0].x) * (-180) / CV_PI;
     pos.push_back({pos_jaw[0].x, pos_jaw[0].y, angle_jaw});
     std::vector<cv::Point2f> pos_clamp;
-    SIFT(img, CLAMP, pos_clamp);
+
+    if(!SIFT(img, CLAMP, pos_clamp)){
+        Read(img);
+        SIFT(img, CLAMP, pos_clamp);
+    }
     float angle_clamp =
         atan2f(pos_clamp[0].y - pos_clamp[1].y, pos_clamp[0].x - pos_clamp[1].x) * (-180) / CV_PI;
-    pos.push_back({pos_clamp[0].x, pos_clamp[0].y, angle_jaw});
+    pos.push_back({pos_clamp[0].x, pos_clamp[0].y, angle_clamp});
 
     cv::line(img, pos_jaw[0] + roiP, pos_jaw[1] + roiP, cv::Scalar(0), 4);
     cv::line(img, pos_clamp[0] + roiP, pos_clamp[1] + roiP, cv::Scalar(0), 4);
@@ -208,6 +224,7 @@ std::vector<std::vector<float>> CameraUP::GetPixelPos() {
     cv::namedWindow(windowname, cv::WINDOW_NORMAL);
     cv::resizeWindow(windowname, cv::Size(1295, 1024));
     cv::imshow(windowname, img);
+    cv::waitKey(0);
     return pos;
 }
 

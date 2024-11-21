@@ -16,11 +16,11 @@ int main() {
     D5R::TaskSpace currentTaskSpace = KineHelper::Forward(currentJointSpace);
 
     D5R::TaskSpace deltaTaskSpace;
-    deltaTaskSpace.Px = 0;
+    deltaTaskSpace.Px = 2;
     deltaTaskSpace.Py = 0;
     deltaTaskSpace.Pz = 0;
     deltaTaskSpace.Ry = 0;
-    deltaTaskSpace.Rz = 0.01;
+    deltaTaskSpace.Rz = 1.2;
 
     int iter = 1000;
 

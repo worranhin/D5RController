@@ -138,24 +138,26 @@ TaskSpace D5Robot::GetCurrentPose() {
 // }
 
 bool D5Robot::VCJawChange() {
-    cv::Mat img;
-    if (!upCamera.Read(img)) {
-        throw RobotException(ErrorCode::CameraReadError);
-        return false;
-    }
+    // cv::Mat img;
+    // if (!upCamera.Read(img)) {
+    //     throw RobotException(ErrorCode::CameraReadError);
+    //     return false;
+    // }
 
     std::vector<double> posError = upCamera.GetPhysicError();
 
     // 插入PID
-    TaskSpace pError{posError[0], posError[1], 0, 0, posError[2]};
+    TaskSpace pError{-posError[1], -posError[0], 0, 0, posError[2]};
     JointSpace jError{};
-    while (pError.Px > 0.1 && pError.Py > 0.1 && pError.Rz > 0.01) {
-        pError.Py = 0.05 * pError.Py;
+    while (pError.Px > 0.1 || pError.Py > 0.1 || pError.Rz > 0.01) {
+        pError.Px = 0.1 * pError.Px;
+        pError.Rz = 0.25 * pError.Rz;
         jError = KineHelper::InverseDifferential(pError, GetCurrentPose());
         JointsMoveRelative(jError.ToControlJoint());
+        Sleep(2000);
         posError.clear();
         posError = upCamera.GetPhysicError();
-        pError = {posError[0], posError[1], 0, 0, posError[2]};
+        pError = {-posError[1], -posError[0], 0, 0, posError[2]};
     }
     return true;
 }

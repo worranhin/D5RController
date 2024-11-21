@@ -18,7 +18,7 @@ public:
   CameraUP(std::string id);
   ~CameraUP();
   void GetJawModel(cv::Mat img);
-  void SIFT(cv::Mat img, ModelType modelname, std::vector<cv::Point2f> &pst);
+  bool SIFT(cv::Mat img, ModelType modelname, std::vector<cv::Point2f> &pst);
   double GetMapParam();
   std::vector<std::vector<float>> GetPixelPos();
   std::vector<std::vector<double>> GetPhysicPos();
