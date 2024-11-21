@@ -18,14 +18,17 @@ int main() {
     // robot.Stop();
     // robot.JointsMoveAbsolute({300, 0, 0, -10000000, 0});
     // robot.JointsMoveAbsolute({0, 500000, 6000000, -7000000, 0});
-    robot.JointsMoveAbsolute({0, -2500000, 2100000, -7000000, 0});
+    // robot.JointsMoveAbsolute({300, -2500000, 2100000, -7000000, 0});  //别动
 
-    int64 start = cv::getTickCount();
-    robot.upCamera.GetPixelPos();
-    int64 end = cv::getTickCount();
-    int64 t = 1000.0 * (end - start) / cv::getTickFrequency();
-    std::cout << t << std::endl;
-    cv::waitKey(0);
+    // int64 start = cv::getTickCount();
+    // robot.upCamera.GetPixelPos();
+    // int64 end = cv::getTickCount();
+    // int64 t = 1000.0 * (end - start) / cv::getTickFrequency();
+    // std::cout << t << std::endl;
+    // cv::waitKey(0);
+
+    // robot.VCJawChange();
+    // cv::waitKey(0);
 
     // cv::Mat img;
     // std::string winname = "test";
