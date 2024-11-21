@@ -50,78 +50,35 @@ public:
     ts.Ry = -space.R5;
     ts.Rz = space.R1;
 
-    ts.Px = std::round(ts.Px * 100) / 100;
-    ts.Py = std::round(ts.Py * 100) / 100;
-    ts.Pz = std::round(ts.Pz * 100) / 100;
-    ts.Ry = std::round(ts.Ry * 100) / 100;
-    ts.Rz = std::round(ts.Rz * 100) / 100;
-
+    roundSpace(ts);
     return ts;
   }
 
   static JointSpace Inverse(const TaskSpace &space) {
     double m1 = l3 + l5 + lty;
+    double m2 = l1 + l2 + l4;
 
     JointSpace js;
     js.R1 = space.Rz;
     js.R5 = -space.Ry;
     js.P2 = space.Px * Sind(space.Rz) - space.Py * Cosd(space.Rz) - m1;
-    js.P3 = space.Px * Cosd(space.Rz) + space.Py * Sind(space.Rz) -
-            ltx * Cosd(-space.Ry) - ltz * Sind(-space.Ry);
-    js.P4 = -space.Pz + ltx * Sind(-space.Ry) - ltz * Cosd(-space.Ry) -
-            (l1 + l2 + l4);
+    js.P3 = space.Px * Cosd(space.Rz) + space.Py * Sind(space.Rz) - ltx * Cosd(-space.Ry) - ltz * Sind(-space.Ry);
+    js.P4 = -space.Pz + ltx * Sind(-space.Ry) - ltz * Cosd(-space.Ry) - m2;
 
-    js.R1 = std::round(js.R1 * 100) / 100;
-    js.R5 = std::round(js.R5 * 100) / 100;
-    js.P2 = std::round(js.P2 * 100) / 100;
-    js.P3 = std::round(js.P3 * 100) / 100;
-    js.P4 = std::round(js.P4 * 100) / 100;
+    roundSpace(js);
 
     return js;
   }
 
   static JointSpace InverseDifferential(const TaskSpace &deltaSpace, const TaskSpace &currentSpace) {
-      JointSpace js;
+      using namespace std::numbers;
+      JointSpace djs;
 
-      double dRz = deltaSpace.Rz;
-      double dRy = deltaSpace.Ry;
-      double dPx = deltaSpace.Px;
-      double dPy = deltaSpace.Py;
-      double dPz = deltaSpace.Pz;
-
-      double rz = currentSpace.Rz;
-      double ry = currentSpace.Ry;
-      double px = currentSpace.Px;
-      double py = currentSpace.Py;
-      double pz = currentSpace.Pz;
-
-      //   js.R1 = deltaSpace.Rz;
-      //   js.R5 = -deltaSpace.Ry;
-      //   js.P2 = Sind(currentSpace.Rz) * deltaSpace.Px + currentSpace.Px * Cosd(currentSpace.Rz) * deltaSpace.Rz
-
-      js.R1 = dRz;
-      js.R5 = -dRy;
-      js.P2 = Sind(rz) * dPx + px * Cosd(rz) * dRz - (Cosd(rz) * dPy - py * Sind(rz) * dRz);
-      js.P3 = Cosd(rz) * dPx - px * Sind(rz) * dRz + Sind(rz) * dPy + py * Cosd(rz) * dRz + ltx * Sind(ry) * dRy + ltz * Cosd(ry) * dRy;
-      js.P4 = -dPz - ltx * Cosd(ry) * dRy + ltz * Sind(ry) * dRy;
-
-      js.R1 = std::round(js.R1 * 100) / 100;
-      js.R5 = std::round(js.R5 * 100) / 100;
-      js.P2 = std::round(js.P2 * 100) / 100;
-      js.P3 = std::round(js.P3 * 100) / 100;
-      js.P4 = std::round(js.P4 * 100) / 100;
-
-      return js;
-  }
-
-  static JointSpace InverseDifferential_Fast(const TaskSpace &deltaSpace, const TaskSpace &currentSpace) {
-      JointSpace js;
-
-      double dRz = deltaSpace.Rz;
-      double dRy = deltaSpace.Ry;
-      double dPx = deltaSpace.Px;
-      double dPy = deltaSpace.Py;
-      double dPz = deltaSpace.Pz;
+      double dRz = deltaSpace.Rz * pi / 180.0; // !!!计算时需要用弧度值!!!
+      double dRy = deltaSpace.Ry * pi / 180.0;
+      double dPx = deltaSpace.Px * pi;
+      double dPy = deltaSpace.Py * pi;
+      double dPz = deltaSpace.Pz * pi;
 
       double rz = currentSpace.Rz;
       double ry = currentSpace.Ry;
@@ -129,22 +86,18 @@ public:
       double py = currentSpace.Py;
       double pz = currentSpace.Pz;
 
-      // TODO: 有点问题，需要确认
-      // js.R1 = dRz;
-      // js.R5 = -dRy;
-      // js.P2 = rz * dPx + px * dRz - (dPy - py * rz * dRz);
-      // js.P3 = dPx - px * rz * dRz + rz * dPy + py * dRz + ltx * ry * dRy + ltz * dRy;
-      // js.P4 = -dPz - ltx * dRy + ltz * ry * dRy;
+      djs.R1 = dRz;
+      djs.R5 = -dRy;
+      djs.P2 = Sind(rz) * dPx - Cosd(rz) * dPy + (px * Cosd(rz) + py * Sind(rz)) * dRz;
+      djs.P3 = Cosd(rz) * dPx + Sind(rz) * dPy + (-px * Sind(rz) + py * Cosd(rz)) * dRz + (ltx * Sind(ry) + ltz * Cosd(ry)) * dRy;
+      djs.P4 = -dPz + (ltx * Cosd(ry) - ltz * Sind(ry)) * (-dRy);
+      // djs.P2 = Sind(rz) * dPx + px * Cosd(rz) * dRz - (Cosd(rz) * dPy - py * Sind(rz) * dRz);
+      // djs.P3 = Cosd(rz) * dPx - px * Sind(rz) * dRz + Sind(rz) * dPy + py * Cosd(rz) * dRz + ltx * Sind(ry) * dRy + ltz * Cosd(ry) * dRy;
+      // djs.P4 = -dPz - ltx * Cosd(ry) * dRy + ltz * Sind(ry) * dRy;
 
-      js.R1 = std::round(js.R1 * 100) / 100;
-      js.R5 = std::round(js.R5 * 100) / 100;
-      js.P2 = std::round(js.P2 * 100) / 100;
-      js.P3 = std::round(js.P3 * 100) / 100;
-      js.P4 = std::round(js.P4 * 100) / 100;
+      roundSpace(djs);
 
-      throw std::runtime_error("Not implemented");
-
-      return js;
+      return djs;
   }
 
   static bool CheckJoint(const JointSpace &js) {
@@ -193,6 +146,22 @@ private:
   static double Sind(double x) {
     using namespace std::numbers;
     return std::sin(x * pi / 180.0);
+  }
+
+  static void roundSpace(JointSpace &jointSpace) {
+      jointSpace.R1 = std::round(jointSpace.R1 * 100) / 100; // 最小 0.01 deg
+      jointSpace.R5 = std::round(jointSpace.R5 * 100) / 100;
+      jointSpace.P2 = std::round(jointSpace.P2 * 10000) / 10000; // 最小 100 nm
+      jointSpace.P3 = std::round(jointSpace.P3 * 10000) / 10000;
+      jointSpace.P4 = std::round(jointSpace.P4 * 10000) / 10000;
+  }
+
+  static void roundSpace(TaskSpace &taskSpace) {
+      taskSpace.Px = std::round(taskSpace.Px * 10000) / 10000; // 保留至 100 nm
+      taskSpace.Py = std::round(taskSpace.Py * 10000) / 10000;
+      taskSpace.Pz = std::round(taskSpace.Pz * 10000) / 10000;
+      taskSpace.Ry = std::round(taskSpace.Ry * 100) / 100; // 保留至 0.01 deg
+      taskSpace.Rz = std::round(taskSpace.Rz * 100) / 100;
   }
 };
 
