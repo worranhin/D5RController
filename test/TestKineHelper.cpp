@@ -10,7 +10,9 @@ std::ostream &printSpace(D5R::TaskSpace space);
 int main() {
     using namespace D5R;
 
-    D5R::JointSpace currentJointSpace(0.0, 0, 0, -10, 0.0);
+    D5R::JointSpace currentJointSpace(0.0, 0, 0, 0.0, 0.0);
+    auto initJointSpace = currentJointSpace;
+    printSpace(currentJointSpace) << std::endl;
     D5R::TaskSpace currentTaskSpace = KineHelper::Forward(currentJointSpace);
 
     D5R::TaskSpace deltaTaskSpace;
@@ -20,26 +22,39 @@ int main() {
     deltaTaskSpace.Ry = 0;
     deltaTaskSpace.Rz = 0.01;
 
+    int iter = 1000;
+
+    for (int i = 0; i < iter; i++) {
+        // // 检测关节
+        // printSpace(currentJointSpace) << "\t\t";
+        // // 正解得到当前任务空间
+        // currentTaskSpace = KineHelper::Forward(currentJointSpace);
+        // // 加上微分得到下一任务空间
+        // currentTaskSpace += deltaTaskSpace;
+        // // 逆解得到下一关节空间
+        // auto nextJointSpace = KineHelper::Inverse(currentTaskSpace);
+        // // 计算差值得到相对运动大小
+        // auto deltaJointSpace = nextJointSpace - currentJointSpace;
+        // printSpace(deltaJointSpace) << std::endl;
+        // // 更新当前关节空间
+        // currentJointSpace += deltaJointSpace;
+
+        // 输出关节量
+        auto deltaJointSpace = D5R::KineHelper::InverseDifferential(deltaTaskSpace, currentTaskSpace);
+        printSpace(deltaJointSpace) << "\t\t";
+        currentJointSpace += deltaJointSpace;  // 移动关节
+        currentTaskSpace = KineHelper::Forward(currentJointSpace);
+        currentTaskSpace += deltaTaskSpace;
+        currentJointSpace = KineHelper::Inverse(currentTaskSpace);
+        printSpace(currentJointSpace) << std::endl;
+    }
+
+    printSpace(currentJointSpace) << std::endl;
+
+    return 0;
+
     D5R::D5Robot robot("\\\\.\\COM16");
-    // robot.JointsMoveAbsolute({4500, 0, 0, -10000000, 0});
-    // return 0;
-    // auto joint = robot.GetCurrentJoint();
-    // robot.JointsMoveRelative({-300, 0, 0, 0, 0});
-    // Sleep(1000);
-    // std::cout << joint.r1 << " " << joint.p2 << " " << joint.p3 << " " << joint.p4 << " " << joint.r5 << std::endl;
 
-    // return 0;
-
-    // TaskSpace ts = KineHelper::Forward({0, 0, 0, 0, 0});
-    // ts.Px = 124;
-    // ts.Py = -21;
-    // ts.Pz = -78.5;
-    // ts.Ry = 0;
-    // ts.Rz = 90;
-    // auto js = KineHelper::Inverse(ts);
-    // printSpace(js);
-
-    // return 0;
     for (int i = 0; i < 10; i++) {
         std::cout << "Round: " << i + 1 << std::endl;
 
@@ -128,11 +143,11 @@ int main() {
 }
 
 std::ostream &printJointSpace(D5R::JointSpace js) {
-    return std::cout << js.R1 << " " << js.P2 << " " << js.P3 << " " << js.P4 << " " << js.R5 << std::endl;
+    return std::cout << js.R1 << " " << js.P2 << " " << js.P3 << " " << js.P4 << " " << js.R5;
 }
 
 std::ostream &printTaskSpace(D5R::TaskSpace ts) {
-    return std::cout << ts.Px << " " << ts.Py << " " << ts.Pz << " " << ts.Ry << " " << ts.Rz << std::endl;
+    return std::cout << ts.Px << " " << ts.Py << " " << ts.Pz << " " << ts.Ry << " " << ts.Rz;
 }
 
 std::ostream &printSpace(D5R::JointSpace space) {
