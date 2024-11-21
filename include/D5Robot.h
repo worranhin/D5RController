@@ -34,6 +34,8 @@ class D5Robot {
     bool Stop();
     bool JointsMoveAbsolute(const Joints j);
     bool JointsMoveRelative(const Joints j);
+    bool TaskMoveAbsolute(const TaskSpace ts);
+    bool TaskMoveRelative(const TaskSpace ts);
     bool VCJawChange();
 
     Joints GetCurrentJoint();
