@@ -1,7 +1,7 @@
 #include "GalaxyCamera.h"
 
 int main() {
-    cv::Mat img = cv::imread("../image/jaw_model.png", 0);
+    cv::Mat img = cv::imread("../image/11_22/jaw0.png", 0);
     if (img.channels() != 1) {
         std::cout << "kahui" << std::endl;
         return -1;
@@ -10,14 +10,14 @@ int main() {
     cv::Mat bulr;
     cv::medianBlur(img, bulr, 5);
 
-    cv::Point2f roiP(20, 0);
-    cv::Rect roi = cv::Rect(roiP, cv::Size(630, 800));
+    cv::Point2f roiP(860, 720);
+    cv::Rect roi = cv::Rect(roiP, cv::Size(620, 780));
     cv::Mat roiImg = bulr(roi).clone();
-    cv::imwrite("../jaw.png", roiImg);
+    cv::imwrite("../image/11_22/jaw_model.png", roiImg);
 
     // 图像处理
     cv::Mat jaw_binary;
-    cv::threshold(roiImg, jaw_binary, 101, 255, cv::THRESH_BINARY);
+    cv::threshold(roiImg, jaw_binary, 60, 255, cv::THRESH_BINARY);
     cv::Mat jaw_Gauss;
     cv::GaussianBlur(jaw_binary, jaw_Gauss, cv::Size(7, 7), 0, 0, cv::BORDER_DEFAULT);
     // Canny边缘检测

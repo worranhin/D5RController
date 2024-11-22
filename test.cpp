@@ -28,6 +28,22 @@ int main() {
     // cv::waitKey(0);
 
     robot.VCJawChange();
+    cv::waitKey(0);
+
+    // cv::Mat img;
+    // cv::Point2f roiP(800, 648);
+    // robot.upCamera.Read(img);
+    // std::vector<cv::Point2f> pos_jaw;
+    // robot.upCamera.SIFT(img, JAW, pos_jaw);
+    // float angle_jaw =
+    //     atan2f(pos_jaw[1].y - pos_jaw[0].y, pos_jaw[1].x - pos_jaw[0].x) * (-180) / CV_PI;
+    // cv::line(img, pos_jaw[0] + roiP, pos_jaw[1] + roiP, cv::Scalar(0), 4);
+    // cv::putText(img, std::to_string(angle_jaw), pos_jaw[1] + roiP,
+    //             cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0), 4);
+    // std::string windowname = "image";
+    // cv::namedWindow(windowname, cv::WINDOW_NORMAL);
+    // cv::resizeWindow(windowname, cv::Size(1295, 1024));
+    // cv::imshow(windowname, img);
     // cv::waitKey(0);
 
     // cv::Mat img;
@@ -43,8 +59,9 @@ int main() {
     //         break;
     //     }
     //     if (cv::waitKey(1) == 32) {
+    //         // robot.upCamera.GetMapParam(img);
     //         std::string filename =
-    //             "../image/11_19/jaw_1" + std::to_string(count) + ".png";
+    //             "../image/11_22/jaw31" + std::to_string(count) + ".png";
     //         cv::imwrite(filename, img);
     //     }
     // }
