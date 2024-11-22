@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "GalaxyCamera.h"
 
 namespace D5R {

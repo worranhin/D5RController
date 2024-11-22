@@ -1,6 +1,6 @@
 #pragma once
 #include "LogUtil.h"
-#include "VCSDK/inc/GxIAPI.h"
+#include <GxIAPI.h>
 #include <iostream>
 #include <opencv2/calib3d.hpp>
 #include <opencv2/core.hpp>
