@@ -77,17 +77,31 @@ bool D5Robot::JointsMoveRelative(const Joints j) {
     NTU_Point p{j.p2, j.p3, j.p4};
     if (!natorMotor.GoToPoint_R(p)) {
         ERROR_("Failed to move nator motor");
+        throw RobotException(ErrorCode::NatorMoveError);
         return false;
     }
     if (!topRMDMotor.GoAngleRelative(j.r1)) {
         ERROR_("Failed to move top RMD motor");
+        throw RobotException(ErrorCode::RMDMoveError);
         return false;
     }
     if (!botRMDMotor.GoAngleRelative(j.r5)) {
         ERROR_("Failed to move bot RMD motor");
+        throw RobotException(ErrorCode::RMDMoveError);
         return false;
     }
     return true;
+}
+
+bool D5Robot::TaskMoveAbsolute(const TaskSpace ts) {
+    JointSpace js = KineHelper::Inverse(ts);
+    return JointsMoveAbsolute(js.ToControlJoint());
+}
+
+bool D5Robot::TaskMoveRelative(const TaskSpace ts) {
+    auto currentPose = GetCurrentPose();
+    JointSpace deltaJoint = KineHelper::InverseDifferential(ts, currentPose);
+    return JointsMoveRelative(deltaJoint.ToControlJoint());
 }
 
 Joints D5Robot::GetCurrentJoint() {

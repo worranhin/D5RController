@@ -24,4 +24,6 @@ D5R_API ErrorCode CallSetZero(D5Robot *instance);
 D5R_API ErrorCode CallStop(D5Robot *instance);
 D5R_API ErrorCode CallJointsMoveAbsolute(D5Robot *instance, const Joints j);
 D5R_API ErrorCode CallJointsMoveRelative(D5Robot *instance, const Joints j);
+D5R_API ErrorCode CallTaskMoveAbsolute(D5Robot *instance, const TaskSpace ts);
+D5R_API ErrorCode CallTaskMoveRelative(D5Robot *instance, const TaskSpace ts);
 }
