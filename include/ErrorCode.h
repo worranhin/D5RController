@@ -25,6 +25,7 @@ enum ErrorCode {
     RMDMoveError,
     D5RError = 500,
     D5RMoveError,
+    D5RCameraNotInitialized,
     CameraError = 600,
     CameraInitError,
     CameraReadError

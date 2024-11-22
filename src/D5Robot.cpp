@@ -11,18 +11,27 @@ D5Robot::D5Robot(
     uint8_t botRMDID,
     std::string upCameraID)
     : _port(serialPort),
-      natorMotor(natorID),
-      upCamera(upCameraID) {
-    topRMDMotor._id = topRMDID;
-    topRMDMotor._handle = _port.GetHandle();
-    botRMDMotor._id = botRMDID;
-    botRMDMotor._handle = _port.GetHandle();
-    _isInit = natorMotor.IsInit() && upCamera.IsInit();
+      topRMDMotor(_port.GetHandle(), topRMDID),
+      botRMDMotor(_port.GetHandle(), botRMDID),
+      natorMotor(natorID) {
+    // topRMDMotor._id = topRMDID;
+    // topRMDMotor._handle = _port.GetHandle();
+    // botRMDMotor._id = botRMDID;
+    // botRMDMotor._handle = _port.GetHandle();
+    // upCamera = new CameraUP(upCameraID);
+    _isInit = natorMotor.IsInit();
     if (!_isInit) {
         throw RobotException(ErrorCode::CreateInstanceError);
     }
 }
-D5Robot::~D5Robot() {}
+D5Robot::~D5Robot() {
+    delete upCamera;
+    upCamera = nullptr;
+}
+
+void D5Robot::InitCamera(std::string upCameraId) {
+    upCamera = new CameraUP(upCameraId);
+}
 
 bool D5Robot::IsInit() { return _isInit; }
 
@@ -157,8 +166,13 @@ bool D5Robot::VCJawChange() {
     //     throw RobotException(ErrorCode::CameraReadError);
     //     return false;
     // }
+    if(!upCamera) {
+        ERROR_("upCamera is not initialized");
+        throw RobotException(ErrorCode::D5RCameraNotInitialized, "upCamera is not initialized");
+        return false;
+    }
 
-    std::vector<double> posError = upCamera.GetPhysicError();
+    std::vector<double> posError = upCamera->GetPhysicError();
 
     // 插入PID
     TaskSpace pError{-posError[1], -posError[0], 0, 0, posError[2]};
@@ -171,7 +185,7 @@ bool D5Robot::VCJawChange() {
         JointsMoveRelative(jError.ToControlJoint());
         Sleep(2000);
         posError.clear();
-        posError = upCamera.GetPhysicError();
+        posError = upCamera->GetPhysicError();
         pError = {-posError[1], -posError[0], 0, 0, posError[2]};
     }
     return true;
