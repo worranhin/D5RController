@@ -39,3 +39,7 @@ target_link_libraries(test D5RbotApi)
 add_executable(TestKineHelper "test/TestKineHelper.cpp")
 target_include_directories(TestKineHelper PUBLIC "${PROJECT_SOURCE_DIR}/include")
 target_link_libraries(TestKineHelper D5Robot)
+
+add_executable(Match "test/Match.cpp")
+target_include_directories(Match PUBLIC "${PROJECT_SOURCE_DIR}/include")
+target_link_libraries(Match D5Robot)

@@ -19,9 +19,9 @@ CameraUP::CameraUP(std::string id) : GxCamera(id) {
     fs2["descriptors"] >> _clamp.descriptors;
     fs2.release();
     // 钳口模板
-    _jaw.img = cv::imread("E:/WYL_workspace/D5RC/lib/Galaxy/image/model/jaw.png", 0);
-    _jaw.center = cv::Point2f(308.277, 407.184);
-    _jaw.point = cv::Point2f(304.042, 45.0638);
+    _jaw.img = cv::imread("E:/WYL_workspace/D5RC/lib/Galaxy/image/model/jaw_model.png", 0);
+    _jaw.center = cv::Point2f(318, 408.5);
+    _jaw.point = cv::Point2f(318, 44);
     cv::FileStorage fs3("E:/WYL_workspace/D5RC/lib/Galaxy/image/yml/KeyPoints_Jaw.yml", cv::FileStorage::READ);
     fs3["keypoints"] >> _jaw.keypoints;
     fs3.release();
@@ -29,7 +29,7 @@ CameraUP::CameraUP(std::string id) : GxCamera(id) {
     fs4["descriptors"] >> _jaw.descriptors;
     fs4.release();
 
-    _mapParam = 0.00945188;
+    _mapParam = 0.00945084;
 }
 
 /**
@@ -153,6 +153,13 @@ bool D5R::CameraUP::SIFT(cv::Mat image, ModelType modelname,
             goodMatches.push_back(knn_matche[0]);
         }
     }
+
+    // 绘制匹配图
+    //  cv::Mat img_matches_knn;
+    //  cv::drawMatches(model, keyPoints_Model, ROI, keyPoints_Img, goodMatches, img_matches_knn, cv::Scalar::all(-1),
+    //                  cv::Scalar::all(-1), std::vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
+    //  cv::imwrite("E:/WYL_workspace/D5RC/image/11_22/res_match_123141.png", img_matches_knn);
+
     // 计算
     std::vector<cv::Point2f> model_P, img_P;
     for (const auto &match : goodMatches) {
@@ -178,9 +185,6 @@ bool D5R::CameraUP::SIFT(cv::Mat image, ModelType modelname,
  * @return double 映射参数
  */
 void CameraUP::GetMapParam(cv::Mat img) {
-    std::string imagename = "Calibration_board";
-    cv::namedWindow(imagename, cv::WINDOW_NORMAL);
-    cv::resizeWindow(imagename, cv::Size(1295, 1024));
     std::vector<cv::Point2f> corner;
     if (!cv::findChessboardCorners(img, cv::Size(19, 15), corner)) {
         std::cerr << "Failed to find corners in image" << std::endl;
@@ -190,6 +194,9 @@ void CameraUP::GetMapParam(cv::Mat img) {
     cv::cornerSubPix(img, corner, cv::Size(6, 6), cv::Size(-1, -1), criteria);
     cv::drawChessboardCorners(img, cv::Size(19, 15), corner, true);
 
+    std::string imagename = "Calibration_board";
+    cv::namedWindow(imagename, cv::WINDOW_NORMAL);
+    cv::resizeWindow(imagename, cv::Size(1295, 1024));
     cv::imshow(imagename, img);
 
     float sum = 0;
