@@ -15,22 +15,24 @@
 namespace D5R {
 
 class GxCamera {
-public:
-  GxCamera(std::string_view id);
-  ~GxCamera();
-  const char *GetGxError();
-  bool Init();
-  bool IsInit();
-  bool Reconnect();
-  void Release();
-  bool Read(cv::OutputArray image);
-  bool Retrieve(cv::OutputArray image);
+  public:
+    GxCamera(std::string_view id);
+    ~GxCamera();
+    const char *GetGxError();
+    bool Init();
+    bool IsInit();
+    bool Reconnect();
+    void Release();
+    bool Read(cv::OutputArray image);
+    bool Retrieve(cv::OutputArray image);
 
-private:
-  GX_DEV_HANDLE _handle{};
-  std::string _id{};
-  bool _isInit{};
-  GX_FRAME_DATA _data{};
-  int64_t _payload{};
+  private:
+    GX_DEV_HANDLE _handle{};
+    std::string _id{};
+    bool _isInit{};
+    GX_FRAME_DATA _data{};
+    int64_t _payload{};
+    cv::Mat _map1{};
+    cv::Mat _map2{};
 };
 } // namespace D5R

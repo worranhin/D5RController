@@ -160,7 +160,7 @@ bool D5R::CameraUP::SIFT(cv::Mat image, ModelType modelname,
         img_P.push_back(keyPoints_Img[match.trainIdx].pt);
     }
 
-    if(img_P.size() < 8){
+    if (img_P.size() < 8) {
         return false;
     }
 
@@ -177,7 +177,37 @@ bool D5R::CameraUP::SIFT(cv::Mat image, ModelType modelname,
  *
  * @return double 映射参数
  */
-double CameraUP::GetMapParam() { return _mapParam; }
+void CameraUP::GetMapParam(cv::Mat img) {
+    std::string imagename = "Calibration_board";
+    cv::namedWindow(imagename, cv::WINDOW_NORMAL);
+    cv::resizeWindow(imagename, cv::Size(1295, 1024));
+    std::vector<cv::Point2f> corner;
+    if (!cv::findChessboardCorners(img, cv::Size(19, 15), corner)) {
+        std::cerr << "Failed to find corners in image" << std::endl;
+        return;
+    }
+    const cv::TermCriteria criteria{cv::TermCriteria::EPS | cv::TermCriteria::COUNT, 10, 0.001};
+    cv::cornerSubPix(img, corner, cv::Size(6, 6), cv::Size(-1, -1), criteria);
+    cv::drawChessboardCorners(img, cv::Size(19, 15), corner, true);
+
+    cv::imshow(imagename, img);
+
+    float sum = 0;
+    cv::Point2f last_point{};
+    int count = 0;
+    for (cv::Point2f point : corner) {
+        count++;
+        if (count != 1 && (count - 1) % 19 != 0) {
+            auto a = sqrt(powf(point.x - last_point.x, 2) + powf(point.y - last_point.y, 2));
+            sum += a;
+        }
+        last_point = point;
+    }
+    float map_param = 18 * 15 / sum;
+    std::cout << "map_param: " << map_param << " (mm/pixel)" << std::endl;
+    cv::waitKey(0);
+    // return _mapParam;
+}
 
 /**
  * @brief 读取相机图片，返回夹钳、钳口在像素坐标的位姿信息
@@ -197,7 +227,7 @@ std::vector<std::vector<float>> CameraUP::GetPixelPos() {
     cv::Mat img;
     Read(img);
     std::vector<cv::Point2f> pos_jaw;
-    if(!SIFT(img, JAW, pos_jaw)){
+    if (!SIFT(img, JAW, pos_jaw)) {
         Read(img);
         SIFT(img, JAW, pos_jaw);
     }
@@ -206,7 +236,7 @@ std::vector<std::vector<float>> CameraUP::GetPixelPos() {
     pos.push_back({pos_jaw[0].x, pos_jaw[0].y, angle_jaw});
     std::vector<cv::Point2f> pos_clamp;
 
-    if(!SIFT(img, CLAMP, pos_clamp)){
+    if (!SIFT(img, CLAMP, pos_clamp)) {
         Read(img);
         SIFT(img, CLAMP, pos_clamp);
     }

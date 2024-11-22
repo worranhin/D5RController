@@ -100,6 +100,11 @@ bool GxCamera::Init() {
     }
     _isInit = true;
 
+    cv::Mat matrix = (cv::Mat_<double>(3, 3) << 105.9035, 0.04435, 0, 0, 105.689, 0, 0, 0, 1);
+    cv::Mat dist = (cv::Mat_<double>(1, 5) << 0, 0, 0, 0, 0);
+    cv::Mat newCameraMatrix = cv::getOptimalNewCameraMatrix(matrix, dist, cv::Size(2592, 2048), 0);
+    cv::initUndistortRectifyMap(matrix, dist, cv::Mat::eye(3, 3, CV_64F), newCameraMatrix, cv::Size(2592, 2048), CV_32FC1, _map1, _map2);
+
     return true;
 }
 
@@ -113,7 +118,10 @@ bool GxCamera::Retrieve(cv::OutputArray image) {
 
     // 解码与转码
     if (pixel_format == GX_PIXEL_FORMAT_MONO8) {
-        image.assign(cv::Mat(height, width, CV_8UC1, buffer));
+        cv::Mat src_img(height, width, CV_8U, buffer);
+        cv::Mat dst;
+        cv::remap(src_img, dst, _map1, _map2, cv::INTER_NEAREST);
+        image.assign(dst);
     } else if (pixel_format == GX_PIXEL_FORMAT_BAYER_GR8 ||
                pixel_format == GX_PIXEL_FORMAT_BAYER_RG8 ||
                pixel_format == GX_PIXEL_FORMAT_BAYER_GB8 ||
@@ -127,7 +135,9 @@ bool GxCamera::Retrieve(cv::OutputArray image) {
             {GX_PIXEL_FORMAT_BAYER_RG8, cv::COLOR_BayerRG2BGR},
         };
         cv::cvtColor(src_img, dst_img, bayer_map.at(pixel_format));
-        image.assign(dst_img);
+        cv::Mat dst;
+        cv::remap(dst_img, dst, _map1, _map2, cv::INTER_NEAREST);
+        image.assign(dst);
     } else {
         ERROR_("Invalid pixel format");
         return false;
@@ -136,7 +146,7 @@ bool GxCamera::Retrieve(cv::OutputArray image) {
 }
 
 bool GxCamera::Read(cv::OutputArray image) {
-    GXSendCommand(_handle, GX_COMMAND_TRIGGER_SOFTWARE);  // 发送软触发命令
+    GXSendCommand(_handle, GX_COMMAND_TRIGGER_SOFTWARE); // 发送软触发命令
 
     auto status = GXGetImage(_handle, &_data, 1000);
     if (status != GX_STATUS_SUCCESS) {
