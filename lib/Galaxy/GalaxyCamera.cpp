@@ -1,4 +1,4 @@
-#include "GalaxyCamera.h"
+﻿#include "GalaxyCamera.h"
 
 namespace D5R {
 
