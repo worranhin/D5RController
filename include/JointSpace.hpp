@@ -54,11 +54,11 @@ public:
 
   Joints ToControlJoint() {
     Joints j;
-    j.r1 = R1 * 100;
-    j.p2 = -P2 * 1000000;
-    j.p3 = P3 * 1000000;
-    j.p4 = P4 * 1000000;
-    j.r5 = R5 * 100;
+    j.r1 = (int)(R1 * 100);
+    j.p2 = (int)(-P2 * 1000000);
+    j.p3 = (int)(P3 * 1000000);
+    j.p4 = (int)(P4 * 1000000);
+    j.r5 = (int)(R5 * 100);
 
     return j;
   }

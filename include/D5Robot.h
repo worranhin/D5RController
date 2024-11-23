@@ -19,21 +19,27 @@ struct Points {
 };
 
 class D5Robot {
+  private:
+    SerialPort _port; // 该声明必须在 RMDMotor 声明之前
+
   public:
     NatorMotor natorMotor;
     RMDMotor topRMDMotor;
     RMDMotor botRMDMotor;
-    CameraUP upCamera;
+    CameraUP *upCamera = nullptr;
 
-    D5Robot(const char *serialPort, std::string natorID = "usb:id:7547982319",
+    D5Robot(const char *serialPort, std::string natorID = NatorId,
             uint8_t topRMDID = 1, uint8_t botRMDID = 2,
-            std::string upCameraID = "00-21-49-03-4D-95");
+            std::string upCameraID = UpCameraId);
     ~D5Robot();
+    void InitCamera(std::string upCameraId = UpCameraId);
     bool IsInit();
     bool SetZero();
     bool Stop();
     bool JointsMoveAbsolute(const Joints j);
     bool JointsMoveRelative(const Joints j);
+    bool TaskMoveAbsolute(const TaskSpace ts);
+    bool TaskMoveRelative(const TaskSpace ts);
     bool VCJawChange();
 
     Joints GetCurrentJoint();
@@ -42,7 +48,9 @@ class D5Robot {
     // Joints InvKine(const Points p);
 
   private:
-    SerialPort _port;
+    inline static const std::string NatorId = "usb:id:7547982319";
+    inline static const std::string UpCameraId = "00-21-49-03-4D-95";
+
     bool _isInit;
 };
 } // namespace D5R

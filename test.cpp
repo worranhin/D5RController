@@ -11,6 +11,7 @@ const std::string natorID = "usb:id:7547982319";
 // void TestApi();
 
 int main() {
+    std::cout << "Hello Robot!" << std::endl;
     // TestMoving();
     // TestApi();
     // TestKineHelper();

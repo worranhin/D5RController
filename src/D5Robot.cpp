@@ -1,4 +1,4 @@
-#include "D5Robot.h"
+﻿#include "D5Robot.h"
 
 namespace D5R {
 
@@ -11,18 +11,27 @@ D5Robot::D5Robot(
     uint8_t botRMDID,
     std::string upCameraID)
     : _port(serialPort),
-      natorMotor(natorID),
-      upCamera(upCameraID) {
-    topRMDMotor._id = topRMDID;
-    topRMDMotor._handle = _port.GetHandle();
-    botRMDMotor._id = botRMDID;
-    botRMDMotor._handle = _port.GetHandle();
-    _isInit = natorMotor.IsInit() && upCamera.IsInit();
+      topRMDMotor(_port.GetHandle(), topRMDID),
+      botRMDMotor(_port.GetHandle(), botRMDID),
+      natorMotor(natorID) {
+    // topRMDMotor._id = topRMDID;
+    // topRMDMotor._handle = _port.GetHandle();
+    // botRMDMotor._id = botRMDID;
+    // botRMDMotor._handle = _port.GetHandle();
+    // upCamera = new CameraUP(upCameraID);
+    _isInit = natorMotor.IsInit();
     if (!_isInit) {
         throw RobotException(ErrorCode::CreateInstanceError);
     }
 }
-D5Robot::~D5Robot() {}
+D5Robot::~D5Robot() {
+    delete upCamera;
+    upCamera = nullptr;
+}
+
+void D5Robot::InitCamera(std::string upCameraId) {
+    upCamera = new CameraUP(upCameraId);
+}
 
 bool D5Robot::IsInit() { return _isInit; }
 
@@ -77,17 +86,31 @@ bool D5Robot::JointsMoveRelative(const Joints j) {
     NTU_Point p{j.p2, j.p3, j.p4};
     if (!natorMotor.GoToPoint_R(p)) {
         ERROR_("Failed to move nator motor");
+        throw RobotException(ErrorCode::NatorMoveError);
         return false;
     }
     if (!topRMDMotor.GoAngleRelative(j.r1)) {
         ERROR_("Failed to move top RMD motor");
+        throw RobotException(ErrorCode::RMDMoveError);
         return false;
     }
     if (!botRMDMotor.GoAngleRelative(j.r5)) {
         ERROR_("Failed to move bot RMD motor");
+        throw RobotException(ErrorCode::RMDMoveError);
         return false;
     }
     return true;
+}
+
+bool D5Robot::TaskMoveAbsolute(const TaskSpace ts) {
+    JointSpace js = KineHelper::Inverse(ts);
+    return JointsMoveAbsolute(js.ToControlJoint());
+}
+
+bool D5Robot::TaskMoveRelative(const TaskSpace ts) {
+    auto currentPose = GetCurrentPose();
+    JointSpace deltaJoint = KineHelper::InverseDifferential(ts, currentPose);
+    return JointsMoveRelative(deltaJoint.ToControlJoint());
 }
 
 Joints D5Robot::GetCurrentJoint() {
@@ -143,20 +166,26 @@ bool D5Robot::VCJawChange() {
     //     throw RobotException(ErrorCode::CameraReadError);
     //     return false;
     // }
+    if(!upCamera) {
+        ERROR_("upCamera is not initialized");
+        throw RobotException(ErrorCode::D5RCameraNotInitialized, "upCamera is not initialized");
+        return false;
+    }
 
-    std::vector<double> posError = upCamera.GetPhysicError();
+    std::vector<double> posError = upCamera->GetPhysicError();
 
     // 插入PID
     TaskSpace pError{-posError[1], -posError[0], 0, 0, posError[2]};
     JointSpace jError{};
     while (pError.Px > 0.1 || pError.Py > 0.1 || pError.Rz > 0.01) {
-        pError.Px = 0.1 * pError.Px;
-        pError.Rz = 0.25 * pError.Rz;
+        pError.Px = 0.2 * pError.Px;
+        pError.Rz = 0.5 * pError.Rz;
+        pError.Py = 0.4 * pError.Py;
         jError = KineHelper::InverseDifferential(pError, GetCurrentPose());
         JointsMoveRelative(jError.ToControlJoint());
         Sleep(2000);
         posError.clear();
-        posError = upCamera.GetPhysicError();
+        posError = upCamera->GetPhysicError();
         pError = {-posError[1], -posError[0], 0, 0, posError[2]};
     }
     return true;
