@@ -42,4 +42,4 @@
 
 ### 配置编译器
 
-将 Cmake 的编译器设置留空，或设置为 MSVC（OpenCV PreBuilt 包不支持 Mingw，若要使用请自行解决）
+基于上面配置 OpenCV 选择的方法，对应地配置 Cmake 的编译器
