@@ -23,17 +23,16 @@ class RobotException : public std::exception {
   }
 
   const char *what() const noexcept {
-      std::string whatInfo; // 注意这里的字符串不能以 e/E 开头，否则会乱码，原因不明
+      std::string whatInfo;
       if (!this->msg.empty()) {
           whatInfo = (this->msg + " Errorcode: " + std::to_string(this->code));
       } else {
-          whatInfo = ("The Error code: " + std::to_string(this->code)); // 注意这里的字符串不能以 e/E 开头，否则会乱码，原因不明
+          whatInfo = ("The Error code: " + std::to_string(this->code)); // 注意这里的字符串不能以 e/E 开头，否则可能会乱码，原因不明
       }
-
-      // *_whatInfo = whatInfo.c_str();
 
       return whatInfo.c_str();
 
+      // TODO: 测试后删除以下注释
       // std::string str;
       // switch (code) {
       // case ErrorCode::OK:
