@@ -42,8 +42,8 @@ void D5Robot::InitNator(std::string natorID) {
  */
 void D5Robot::InitRMD(const char *portName, uint8_t topRMDID, uint8_t botRMDID) {
     _port = new SerialPort(portName);
-    topRMDMotor = new RMDMotor(portName, topRMDID);
-    botRMDMotor = new RMDMotor(portName, botRMDID);
+    topRMDMotor = new RMDMotor(_port->GetHandle(), topRMDID);
+    botRMDMotor = new RMDMotor(_port->GetHandle(), botRMDID);
 }
 
 void D5Robot::InitCamera(std::string upCameraId) {

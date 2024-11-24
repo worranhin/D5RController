@@ -36,10 +36,10 @@ int main() {
         std::cout << e.what() << std::endl;
     }
 
-    // robot.JointsMoveAbsolute({300, -4000000, 1800000, -7000000, 0}); // 别动
+    // robot.JointsMoveAbsolute({300, 4000000, 5000000, -10000000, 0});
+    robot.JointsMoveAbsolute({300, -4000000, 1800000, -7000000, 0}); // 别动
 
     // robot.Stop();
-    // robot.JointsMoveAbsolute({300, 0, 0, -10000000, 0});
     // robot.JointsMoveAbsolute({0, 500000, 6000000, -7000000, 0});
     // Sleep(5000);
     // int64 start = cv::getTickCount();
@@ -49,8 +49,8 @@ int main() {
     // std::cout << t << std::endl;
     // cv::waitKey(0);
 
-    robot.VCJawChange();
-    cv::waitKey(0);
+    // robot.VCJawChange();
+    // cv::waitKey(0);
 
     // cv::Mat img;
     // cv::Point2f roiP(800, 648);
@@ -68,25 +68,47 @@ int main() {
     // cv::imshow(windowname, img);
     // cv::waitKey(0);
 
-    // cv::Mat img;
-    // std::string winname = "test";
-    // cv::namedWindow(winname, cv::WINDOW_NORMAL);
-    // cv::resizeWindow(winname, cv::Size(1295, 1024));
-    // int count = 0;
-    // while (robot.upCamera.Read(img)) {
+    //测试相机
+    cv::Mat img;
+    std::string winname = "test";
+    cv::namedWindow(winname, cv::WINDOW_NORMAL);
+    cv::resizeWindow(winname, cv::Size(1295, 1024));
+    int count = 0;
+    while (robot.upCamera->Read(img)) {
 
-    //     cv::imshow(winname, img);
-    //     // cv::rectangle(img, cv::Poitn())
-    //     if (cv::waitKey(1) == 27) {
-    //         break;
-    //     }
-    //     if (cv::waitKey(1) == 32) {
-    //         // robot.upCamera.GetMapParam(img);
-    //         std::string filename =
-    //             "../image/11_22/jaw31" + std::to_string(count) + ".png";
-    //         cv::imwrite(filename, img);
-    //     }
-    // }
+        cv::imshow(winname, img);
+        if (cv::waitKey(1) == 27) {
+            break;
+        }
+        if (cv::waitKey(1) == 32) {
+            // robot.upCamera.GetMapParam(img);
+            std::string filename =
+                "../image/11_22/jaw31" + std::to_string(count) + ".png";
+            cv::imwrite(filename, img);
+        }
+    }
+    cv::waitKey(0);
+
+    // Sleep(5000);
+    // int64 start = cv::getTickCount();
+    // robot.upCamera.GetPixelPos();
+    // int64 end = cv::getTickCount();
+    // int64 t = 1000.0 * (end - start) / cv::getTickFrequency();
+    // std::cout << t << std::endl;
+    // cv::waitKey(0);
+
+    // robot.VCJawChange();
+    // cv::waitKey(0);
+
+    //测试OpenCV
+    // cv::Mat img = cv::imread("../image/11_19/jaw_0.png");
+    // std::string windowname = "image";
+    // cv::namedWindow(windowname, cv::WINDOW_NORMAL);
+    // cv::resizeWindow(windowname, cv::Size(1295, 1024));
+    // cv::imshow(windowname, img);
+    // cv::waitKey(0);
+
+
 
     return 0;
 }
