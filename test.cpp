@@ -15,11 +15,32 @@ int main() {
     // TestMoving();
     // TestApi();
     // TestKineHelper();
-    D5R::D5Robot robot(port.c_str());
+    // D5R::D5Robot robot(port.c_str());
+    D5R::D5Robot robot;
+
+    try {
+        robot.InitNator(natorID);
+    } catch (D5R::RobotException &e) {
+        std::cout << e.what() << std::endl;
+    }
+
+    try {
+        robot.InitRMD(port.c_str());
+    } catch (D5R::RobotException &e) {
+        std::cout << e.what() << std::endl;
+    }
+
+    try {
+        robot.InitCamera();
+    } catch (D5R::RobotException &e) {
+        std::cout << e.what() << std::endl;
+    }
+
+    // robot.JointsMoveAbsolute({300, -4000000, 1800000, -7000000, 0}); // 别动
+
     // robot.Stop();
     // robot.JointsMoveAbsolute({300, 0, 0, -10000000, 0});
     // robot.JointsMoveAbsolute({0, 500000, 6000000, -7000000, 0});
-    robot.JointsMoveAbsolute({300, -4000000, 1800000, -7000000, 0}); // 别动
     // Sleep(5000);
     // int64 start = cv::getTickCount();
     // robot.upCamera.GetPixelPos();

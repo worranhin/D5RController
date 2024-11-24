@@ -8,6 +8,11 @@ project(D5RC VERSION 0.2)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+# 设置 OpenCV 的搜索路径
+set(OpenCV_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/Galaxy/lib/OpenCV_4_10") # 若使用 Mingw，则需要正确设置 OpenCV_DIR, 并将库地址添加到环境变量中
+
+add_compile_definitions(ROOT_DIR="${CMAKE_CURRENT_SOURCE_DIR}") # 定义项目根目录
+
 add_subdirectory(lib/RMD)
 add_subdirectory(lib/Nator)
 add_subdirectory(lib/Galaxy)

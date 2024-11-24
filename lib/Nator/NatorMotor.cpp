@@ -17,7 +17,7 @@ NatorMotor::NatorMotor(std::string id) : _id(id) {
   if(!_isInit)
   {
     std::cerr << "Failed to init NatorMotor" << std::endl;
-    throw RobotException(ErrorCode::NatorInitError);
+    throw RobotException(ErrorCode::NatorInitError, "In NatorMotor constructor: Failed to init NatorMotor");
   }
 }
 NatorMotor::~NatorMotor() { NT_CloseSystem(_handle); }

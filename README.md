@@ -10,6 +10,18 @@
 
 ### 配置 OpenCV
 
+#### 使用 MinGW
+
+本仓库内部已包含 OpenCV 的 MinGW 预编译版本
+
+1. 确保 `CMakeLists.txt` 中正确设置了 `OpenCV_DIR` 
+2. 将 `lib/Galaxy/OpenCV_4_10/x64/bin` 添加到环境变量的 `Path` 中
+
+#### 使用 MSbuild
+
+> [!CAUTION]  
+> 此方法未充分测试，在部分电脑上会无法正常运行
+
 1. 去 OpenCV 官网下载 PreBuilt 包并安装 [[链接在此](https://github.com/opencv/opencv/releases/latest)]
 2. 将如下路径添加进环境变量的 Path 中  
     `path\to\opencv\build\x64\vc16\bin`  
@@ -30,4 +42,4 @@
 
 ### 配置编译器
 
-将 Cmake 的编译器设置留空，或设置为 MSVC（OpenCV PreBuilt 包不支持 Mingw，若要使用请自行解决）
+基于上面配置 OpenCV 选择的方法，对应地配置 Cmake 的编译器
