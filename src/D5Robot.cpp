@@ -229,13 +229,13 @@ bool D5Robot::VCJawChange() {
     // 插入PID
     TaskSpace pError{-posError[1], -posError[0], 0, 0, posError[2]};
     JointSpace jError{};
-    while (pError.Px > 0.1 || pError.Py > 0.1 || pError.Rz > 0.01) {
+    while (abs(pError.Px) > 0.1 || abs(pError.Py) > 0.1 || abs(pError.Rz) > 0.01) {
         pError.Px = 0.2 * pError.Px;
         pError.Rz = 0.5 * pError.Rz;
         pError.Py = 0.4 * pError.Py;
         jError = KineHelper::InverseDifferential(pError, GetCurrentPose());
         JointsMoveRelative(jError.ToControlJoint());
-        Sleep(2000);
+        Sleep(500);
         posError.clear();
         posError = upCamera->GetPhysicError();
         pError = {-posError[1], -posError[0], 0, 0, posError[2]};
