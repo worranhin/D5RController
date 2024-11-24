@@ -15,29 +15,42 @@ int main() {
     // TestMoving();
     // TestApi();
     // TestKineHelper();
+    // D5R::D5Robot robot(port.c_str());
+    D5R::D5Robot robot;
+
     try {
-        D5R::D5Robot robot(port.c_str());
-        robot.JointsMoveAbsolute({300, -4000000, 1800000, -7000000, 0}); // 别动
-
-        // robot.Stop();
-        // robot.JointsMoveAbsolute({300, 0, 0, -10000000, 0});
-        // robot.JointsMoveAbsolute({0, 500000, 6000000, -7000000, 0});
-        // Sleep(5000);
-        // int64 start = cv::getTickCount();
-        // robot.upCamera.GetPixelPos();
-        // int64 end = cv::getTickCount();
-        // int64 t = 1000.0 * (end - start) / cv::getTickFrequency();
-        // std::cout << t << std::endl;
-        // cv::waitKey(0);
-
-        robot.VCJawChange();
-        cv::waitKey(0);
-
+        robot.InitNator(natorID);
     } catch (D5R::RobotException &e) {
         std::cout << e.what() << std::endl;
-
-        throw;
     }
+
+    try {
+        robot.InitRMD(port.c_str());
+    } catch (D5R::RobotException &e) {
+        std::cout << e.what() << std::endl;
+    }
+
+    try {
+        robot.InitCamera();
+    } catch (D5R::RobotException &e) {
+        std::cout << e.what() << std::endl;
+    }
+
+    // robot.JointsMoveAbsolute({300, -4000000, 1800000, -7000000, 0}); // 别动
+
+    // robot.Stop();
+    // robot.JointsMoveAbsolute({300, 0, 0, -10000000, 0});
+    // robot.JointsMoveAbsolute({0, 500000, 6000000, -7000000, 0});
+    // Sleep(5000);
+    // int64 start = cv::getTickCount();
+    // robot.upCamera.GetPixelPos();
+    // int64 end = cv::getTickCount();
+    // int64 t = 1000.0 * (end - start) / cv::getTickFrequency();
+    // std::cout << t << std::endl;
+    // cv::waitKey(0);
+
+    robot.VCJawChange();
+    cv::waitKey(0);
 
     // cv::Mat img;
     // cv::Point2f roiP(800, 648);

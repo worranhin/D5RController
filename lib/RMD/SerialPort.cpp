@@ -9,14 +9,14 @@ SerialPort::SerialPort(const char *serialPort) {
   _handle = CreateFile(serialPort, GENERIC_READ | GENERIC_WRITE, 0, 0,
                        OPEN_EXISTING, 0, 0);
   if (_handle == INVALID_HANDLE_VALUE) {
-    throw RobotException(ErrorCode::SerialInitError);
-    return;
+      throw RobotException(ErrorCode::SerialInitError, "In SerialPort constructor: Failed to open serial port");
+      return;
   }
 
   BOOL bSuccess = SetupComm(_handle, 100, 100);
   if (!bSuccess) {
-    throw RobotException(ErrorCode::SerialInitError);
-    return;
+      throw RobotException(ErrorCode::SerialInitError, "In SerialPort constructor: Failed to Setup Comm");
+      return;
   }
 
   COMMTIMEOUTS commTimeouts = {0};
@@ -28,23 +28,23 @@ SerialPort::SerialPort(const char *serialPort) {
 
   bSuccess = SetCommTimeouts(_handle, &commTimeouts);
   if (!bSuccess) {
-    throw RobotException(ErrorCode::SerialInitError);
-    return;
+      throw RobotException(ErrorCode::SerialInitError, "In SerialPort constructor: Failed to Set Comm Timeouts");
+      return;
   }
 
   DCB dcbSerialParams = {0};
   dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
   if (!GetCommState(_handle, &dcbSerialParams)) {
-    throw RobotException(ErrorCode::SerialInitError);
-    return;
+      throw RobotException(ErrorCode::SerialInitError, "In SerialPort constructor: Failed to Get Comm State");
+      return;
   }
   dcbSerialParams.BaudRate = CBR_115200;
   dcbSerialParams.ByteSize = 8;
   dcbSerialParams.StopBits = ONESTOPBIT;
   dcbSerialParams.Parity = NOPARITY;
   if (!SetCommState(_handle, &dcbSerialParams)) {
-    throw RobotException(ErrorCode::SerialInitError);
-    return;
+      throw RobotException(ErrorCode::SerialInitError, "In SerialPort constructor: Failed to Set Comm State");
+      return;
   }
 }
 
