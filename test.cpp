@@ -31,13 +31,18 @@ int main() {
     }
 
     try {
-        robot.InitCamera();
+        robot.InitCamera("00-21-49-03-4D-95");
     } catch (D5R::RobotException &e) {
         std::cout << e.what() << std::endl;
     }
+    // try {
+    //     robot.InitCamera();
+    // } catch (D5R::RobotException &e) {
+    //     std::cout << e.what() << std::endl;
+    // }
 
     // robot.JointsMoveAbsolute({300, 4000000, 5000000, -10000000, 0});
-    robot.JointsMoveAbsolute({300, -3650000, 1800000, -10000000, 0}); // 别动
+    // robot.JointsMoveAbsolute({300, -3650000, 1800000, -10000000, 0}); // 别动
 
     // robot.Stop();
     // robot.JointsMoveAbsolute({0, 500000, 6000000, -7000000, 0});
@@ -68,26 +73,28 @@ int main() {
     // cv::imshow(windowname, img);
     // cv::waitKey(0);
 
-    //测试相机
-    // cv::Mat img;
-    // std::string winname = "test";
-    // cv::namedWindow(winname, cv::WINDOW_NORMAL);
-    // cv::resizeWindow(winname, cv::Size(1295, 1024));
-    // int count = 0;
-    // while (robot.upCamera->Read(img)) {
+    // 测试相机
+    cv::Mat img;
+    std::string winname = "test";
+    cv::namedWindow(winname, cv::WINDOW_NORMAL);
+    cv::resizeWindow(winname, cv::Size(1295, 1024));
+    int count = 0;
+    while (robot.upCamera->Read(img)) {
 
-    //     cv::imshow(winname, img);
-    //     if (cv::waitKey(1) == 27) {
-    //         break;
-    //     }
-    //     if (cv::waitKey(1) == 32) {
-    //         // robot.upCamera.GetMapParam(img);
-    //         std::string filename =
-    //             "../image/11_22/jaw31" + std::to_string(count) + ".png";
-    //         cv::imwrite(filename, img);
-    //     }
-    // }
-    // cv::waitKey(0);
+        cv::imshow(winname, img);
+        if (cv::waitKey(1) == 27) {
+            break;
+        }
+        if (cv::waitKey(1) == 32) {
+            // robot.upCamera.GetMapParam(img);
+            std::string filename =
+                "../image/11_24/topC_clamp_rang_" + std::to_string(count++) + ".png";
+            cv::imwrite(filename, img);
+            // std::cout << count++ << std::endl;
+            continue;
+        }
+    }
+    cv::waitKey(0);
 
     // Sleep(5000);
     // int64 start = cv::getTickCount();
@@ -100,15 +107,13 @@ int main() {
     // robot.VCJawChange();
     // cv::waitKey(0);
 
-    //测试OpenCV
-    // cv::Mat img = cv::imread("../image/11_19/jaw_0.png");
-    // std::string windowname = "image";
-    // cv::namedWindow(windowname, cv::WINDOW_NORMAL);
-    // cv::resizeWindow(windowname, cv::Size(1295, 1024));
-    // cv::imshow(windowname, img);
-    // cv::waitKey(0);
-
-
+    // 测试OpenCV
+    //  cv::Mat img = cv::imread("../image/11_19/jaw_0.png");
+    //  std::string windowname = "image";
+    //  cv::namedWindow(windowname, cv::WINDOW_NORMAL);
+    //  cv::resizeWindow(windowname, cv::Size(1295, 1024));
+    //  cv::imshow(windowname, img);
+    //  cv::waitKey(0);
 
     return 0;
 }

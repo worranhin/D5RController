@@ -53,6 +53,7 @@ class D5Robot {
   private:
     inline static const std::string NatorId = "usb:id:7547982319";
     inline static const std::string UpCameraId = "00-21-49-03-4D-95";
+    inline static const std::string BotCameraId = "00-21-49-03-4D-94";
 
     bool _isInit;
 };
