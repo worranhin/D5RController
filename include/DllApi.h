@@ -18,7 +18,6 @@ D5R_API ErrorCode CreateD5RobotInstance2(D5Robot *&instance,
                                          uint8_t bottomRMDID,
                                          const char *upCameraID);
 D5R_API ErrorCode DestroyD5RobotInstance(D5Robot *instance);
-D5R_API bool CallIsInit(D5Robot *instance);
 D5R_API ErrorCode CallSetZero(D5Robot *instance);
 D5R_API ErrorCode CallStop(D5Robot *instance);
 D5R_API ErrorCode CallJointsMoveAbsolute(D5Robot *instance, const Joints j);

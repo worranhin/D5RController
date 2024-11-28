@@ -50,8 +50,6 @@ ErrorCode DestroyD5RobotInstance(D5Robot *instance) {
     }
 }
 
-bool CallIsInit(D5Robot *instance) { return instance->IsInit(); }
-
 ErrorCode CallSetZero(D5Robot *instance) { TRY_BLOCK(instance->SetZero();) }
 
 ErrorCode CallStop(D5Robot *instance) { TRY_BLOCK(instance->Stop();) }
