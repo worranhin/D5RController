@@ -82,17 +82,14 @@ NTU_Point NatorMotor::GetPosition() {
     res = NT_GetPosition_S(_handle, NTU_AXIS_X, &(p.x));
     if (res != NT_OK) {
         throw RobotException(ErrorCode::NatorGetError, "In NatorMotor::GetPosition, Failed to get axis_x positon, error status: " + std::to_string(res));
-        return;
     }
     res = NT_GetPosition_S(_handle, NTU_AXIS_Y, &(p.y));
     if (res != NT_OK) {
         throw RobotException(ErrorCode::NatorGetError, "In NatorMotor::GetPosition, Failed to get axis_y positon, error status: " + std::to_string(res));
-        return;
     }
     res = NT_GetPosition_S(_handle, NTU_AXIS_Z, &(p.z));
     if (res != NT_OK) {
         throw RobotException(ErrorCode::NatorGetError, "In NatorMotor::GetPosition, Failed to get axis_z positon, error status: " + std::to_string(res));
-        return;
     }
     return p;
 }
