@@ -1,9 +1,30 @@
-﻿#include "GalaxyCamera.h"
+﻿/**
+ * @file GalaxyCamera.cpp
+ * @author worranhin (worranhin@foxmail.com)
+ * @author drawal (2581478521@qq.com)
+ * @brief Implementation of GxCamera Class
+ * @version 0.1
+ * @date 2024-11-28
+ *
+ * @copyright Copyright (c) 2024
+ *
+ */
+#include "GalaxyCamera.h"
 
 namespace D5R {
 
-GxCamera::GxCamera(std::string_view id) : _id(id) { _isInit = Init(); }
+/**
+ * @brief Construct a new Gx Camera:: Gx Camera object
+ *
+ * @param id 大恒相机MAC地址
+ */
+GxCamera::GxCamera(std::string_view id) : _id(id) { Init(); }
 
+/**
+ * @brief 获取GxCamera最后的错误信息
+ *
+ * @return const char*
+ */
 const char *GxCamera::GetGxError() {
     size_t size = 256;
     static char err_info[256];
@@ -11,23 +32,24 @@ const char *GxCamera::GetGxError() {
     return err_info;
 }
 
-bool GxCamera::Init() {
+/**
+ * @brief GxCamera初始化
+ *
+ */
+void GxCamera::Init() {
     // 初始化Lib
     auto status = GXInitLib();
     if (status != GX_STATUS_SUCCESS) {
         throw RobotException(ErrorCode::CameraInitError, "In GxCamera::Init, Failed to init the lib, error: " + std::string(GetGxError()));
-        return false;
     }
     // 枚举相机
     uint32_t nums{};
     status = GXUpdateAllDeviceList(&nums, 1000);
     if (status != GX_STATUS_SUCCESS) {
         throw RobotException(ErrorCode::CameraInitError, "In GxCamera::Init, Failed to update device list, error: " + std::string(GetGxError()));
-        return false;
     }
     if (nums == 0) {
         throw RobotException(ErrorCode::CameraInitError, "In GxCamera::Init, Could not find any camera device");
-        return false;
     }
     PASS_("Success to enum the camera device, num = %d", nums);
     // 获取设备信息
@@ -37,7 +59,6 @@ bool GxCamera::Init() {
     status = GXGetAllDeviceBaseInfo(device_info.data(), &base_info_size);
     if (status != GX_STATUS_SUCCESS) {
         throw RobotException(ErrorCode::CameraInitError, "In GxCamera::Init, Failed to get device info, error: " + std::string(GetGxError()));
-        return false;
     }
 
     // 定义设备打开参数
@@ -50,8 +71,7 @@ bool GxCamera::Init() {
             continue;
         status = GXGetDeviceIPInfo(i + 1, &ip_info);
         if (status != GX_STATUS_SUCCESS) {
-            ERROR_("Failed to get device IP, error: %s", GetGxError());
-            return false;
+            throw RobotException(ErrorCode::CameraInitError, "In GxCamera::Init, Failed to get device IP, error: " + std::string(GetGxError()));
         }
         mac_set.emplace(ip_info.szMAC);
     }
@@ -62,16 +82,14 @@ bool GxCamera::Init() {
         open_param.pszContent = const_cast<char *>(_id.c_str());
         status = GXOpenDevice(&open_param, &_handle);
     } else {
-        ERROR_("Could not find the device matched with the provided MAC");
         for (const auto &mac : mac_set) {
             INFO_("current MAC: %s", mac.c_str());
         }
-        return false;
+        throw RobotException(ErrorCode::CameraInitError, "In GxCamera::Init, Could not find the device matched with the provided MAC");
     }
 
     if (status != GX_STATUS_SUCCESS) {
-        ERROR_("Failed to open the camera, error: %s", GetGxError());
-        return false;
+        throw RobotException(ErrorCode::CameraInitError, "In GxCamera::Init, Failed to open the camera, error: " + std::string(GetGxError()));
     } else {
         // 设置相机流通道包长属性
         uint32_t packet_size{};
@@ -89,28 +107,28 @@ bool GxCamera::Init() {
     // 取流
     status = GXGetInt(_handle, GX_INT_PAYLOAD_SIZE, &_payload);
     if (status != GX_STATUS_SUCCESS || _payload <= 0) {
-        ERROR_("Failed to get payload size, error: %s", GetGxError());
-        return false;
+        throw RobotException(ErrorCode::CameraInitError, "In GxCamera::Init, Failed to get payload size, error: " + std::string(GetGxError()));
     }
     _data.pImgBuf = malloc(_payload);
     status = GXSendCommand(_handle, GX_COMMAND_ACQUISITION_START);
     if (status != GX_STATUS_SUCCESS) {
-        ERROR_("Failed to start stream, error: %s", GetGxError());
         free(_data.pImgBuf);
-        return false;
+        throw RobotException(ErrorCode::CameraInitError, "In GxCamera::Init, Failed to start stream, error: " + std::string(GetGxError()));
     }
-    _isInit = true;
 
     cv::Mat matrix = (cv::Mat_<double>(3, 3) << 105.9035, 0.04435, 0, 0, 105.689, 0, 0, 0, 1);
     cv::Mat dist = (cv::Mat_<double>(1, 5) << 0, 0, 0, 0, 0);
     cv::Mat newCameraMatrix = cv::getOptimalNewCameraMatrix(matrix, dist, cv::Size(2592, 2048), 0);
     cv::initUndistortRectifyMap(matrix, dist, cv::Mat::eye(3, 3, CV_64F), newCameraMatrix, cv::Size(2592, 2048), CV_32FC1, _map1, _map2);
-
-    return true;
 }
 
-bool GxCamera::IsInit() { return _isInit; }
-
+/**
+ * @brief 图像信息转码解码
+ *
+ * @param image 解码后获取的图像
+ * @return true
+ * @return false
+ */
 bool GxCamera::Retrieve(cv::OutputArray image) {
     // 获取像素格式、图像宽高、图像缓冲区
     int32_t pixel_format = _data.nPixelFormat;
@@ -146,6 +164,13 @@ bool GxCamera::Retrieve(cv::OutputArray image) {
     return true;
 }
 
+/**
+ * @brief 获取相机图像
+ *
+ * @param image 读取的图像
+ * @return true
+ * @return false
+ */
 bool GxCamera::Read(cv::OutputArray image) {
     GXSendCommand(_handle, GX_COMMAND_TRIGGER_SOFTWARE); // 发送软触发命令
 
@@ -159,13 +184,21 @@ bool GxCamera::Read(cv::OutputArray image) {
     return flag;
 }
 
-bool GxCamera::Reconnect() {
+/**
+ * @brief 设备重连
+ *
+ */
+void GxCamera::Reconnect() {
     ERROR_("camera device reconnect ");
     Release();
     Sleep(100);
-    return Init();
+    Init();
 }
 
+/**
+ * @brief 相机句柄释放
+ *
+ */
 void GxCamera::Release() {
     auto status = GXSendCommand(_handle, GX_COMMAND_ACQUISITION_STOP);
     if (status != GX_STATUS_SUCCESS) {

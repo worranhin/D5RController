@@ -1,3 +1,14 @@
+/**
+ * @file GalaxyCamera.h
+ * @author worranhin (worranhin@foxmail.com)
+ * @author drawal (2581478521@qq.com)
+ * @brief GxCamera Class
+ * @version 0.1
+ * @date 2024-11-28
+ *
+ * @copyright Copyright (c) 2024
+ *
+ */
 #pragma once
 #include "RobotException.hpp"
 #include <GxIAPI.h>
@@ -19,9 +30,8 @@ class GxCamera {
     GxCamera(std::string_view id);
     ~GxCamera();
     const char *GetGxError();
-    bool Init();
-    bool IsInit();
-    bool Reconnect();
+    void Init();
+    void Reconnect();
     void Release();
     bool Read(cv::OutputArray image);
     bool Retrieve(cv::OutputArray image);
@@ -29,7 +39,6 @@ class GxCamera {
   private:
     GX_DEV_HANDLE _handle{};
     std::string _id{};
-    bool _isInit{};
     GX_FRAME_DATA _data{};
     int64_t _payload{};
     cv::Mat _map1{};
