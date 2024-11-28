@@ -19,16 +19,18 @@ add_subdirectory(lib/Galaxy)
 
 # 五自由度机器人类
 add_library(D5Robot src/D5Robot.cpp)
-target_include_directories(D5Robot PUBLIC 
-    "${PROJECT_SOURCE_DIR}" 
-    "${PROJECT_SOURCE_DIR}/include" 
-    "${PROJECT_SOURCE_DIR}/lib/RMD" 
-    "${PROJECT_SOURCE_DIR}/lib/Nator" 
+target_include_directories(D5Robot PUBLIC
+    "${PROJECT_SOURCE_DIR}"
+    "${PROJECT_SOURCE_DIR}/include"
+    "${PROJECT_SOURCE_DIR}/lib/RMD"
+    "${PROJECT_SOURCE_DIR}/lib/Nator"
     "${PROJECT_SOURCE_DIR}/lib/Galaxy"
-    "${PROJECT_SOURCE_DIR}/lib/Galaxy/include")
+
+    # "${PROJECT_SOURCE_DIR}/lib/Galaxy/include"
+    "${CMAKE_SOURCE_DIR}/global")
 target_link_libraries(D5Robot PUBLIC RMDMotor)
 target_link_libraries(D5Robot PUBLIC NatorMotor)
-target_link_libraries(D5Robot PUBLIC CameraUp)
+target_link_libraries(D5Robot PUBLIC CameraTop)
 
 # 导出 DllAPI
 add_library(D5RbotApi SHARED src/DllApi.cpp)

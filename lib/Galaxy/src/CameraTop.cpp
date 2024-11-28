@@ -1,4 +1,15 @@
-#include "CameraUP.h"
+/**
+ * @file CameraTop.cpp
+ * @author worranhin (worranhin@foxmail.com)
+ * @author drawal (2581478521@qq.com)
+ * @brief
+ * @version 0.1
+ * @date 2024-11-28
+ *
+ * @copyright Copyright (c) 2024
+ *
+ */
+#include "CameraTop.h"
 
 namespace D5R {
 /**
@@ -6,7 +17,7 @@ namespace D5R {
  *
  * @param id 相机的Mac地址
  */
-CameraUP::CameraUP(std::string id) : GxCamera(id) {
+CameraTop::CameraTop(std::string id) : GxCamera(id) {
     // 夹钳模板
     std::string root(ROOT_DIR);
     _clamp.img = cv::imread(root + "/lib/Galaxy/image/model/clamp.png", 0);
@@ -36,7 +47,7 @@ CameraUP::CameraUP(std::string id) : GxCamera(id) {
  * @brief 相机析构函数
  *
  */
-CameraUP::~CameraUP() {}
+CameraTop::~CameraTop() {}
 
 /**
  * @brief 获取钳口模板，记录钳口模板的特征信息，
@@ -46,7 +57,7 @@ CameraUP::~CameraUP() {}
  * @param img 相机获取的图片，为灰度图
  *
  */
-void CameraUP::GetJawModel(cv::Mat img) {
+void CameraTop::GetJawModel(cv::Mat img) {
     return;
 
     if (img.channels() != 1) {
@@ -100,19 +111,17 @@ void CameraUP::GetJawModel(cv::Mat img) {
 }
 
 /**
- * @brief
- * 特征匹配算法，image与模板进行匹配，返回模板在image中的位置信息，需要注意的是，如果对JAW进行模板匹配，需确定已经获取JAW模板
+ * @brief 特征匹配算法，image与模板进行匹配，返回模板在image中的位置信息，需要注意的是，如果对JAW进行模板匹配，需确定已经获取JAW模板
  *
  * @param image 相机实时图像，灰度图
  * @param modelname JAW-钳口 CLAMP-夹钳
  * @param pst 模板在像素坐标系下的位置信息，pst[0]:center;pst[1]:positon point
  *
- * @todo
- * JAW在钳口库模板匹配时，需ROI区域，否则其他钳口会发生干扰，ROI区域由GetJawModel函数确定，建议为类内变量
+ * @todo 需添加模板匹配不成功时的解决方案
  *
  */
-bool D5R::CameraUP::SIFT(cv::Mat image, ModelType modelname,
-                         std::vector<cv::Point2f> &pst) {
+bool D5R::CameraTop::SIFT(cv::Mat image, ModelType modelname,
+                          std::vector<cv::Point2f> &pst) {
     cv::Mat model;
     std::vector<cv::Point2f> modelPosition;
     std::vector<cv::KeyPoint> keyPoints_Model;
@@ -180,11 +189,11 @@ bool D5R::CameraUP::SIFT(cv::Mat image, ModelType modelname,
 }
 
 /**
- * @brief 返回相机映射参数
+ * @brief 获取相机映射参数
  *
- * @return double 映射参数
+ * @param img 标定图片
  */
-void CameraUP::GetMapParam(cv::Mat img) {
+void CameraTop::GetMapParam(cv::Mat img) {
     std::vector<cv::Point2f> corner;
     if (!cv::findChessboardCorners(img, cv::Size(19, 15), corner)) {
         std::cerr << "Failed to find corners in image" << std::endl;
@@ -213,7 +222,6 @@ void CameraUP::GetMapParam(cv::Mat img) {
     float map_param = 18 * 15 / sum;
     std::cout << "map_param: " << map_param << " (mm/pixel)" << std::endl;
     cv::waitKey(0);
-    // return _mapParam;
 }
 
 /**
@@ -222,7 +230,7 @@ void CameraUP::GetMapParam(cv::Mat img) {
  * @return std::vector<std::vector<float>> 返回参数列表： {{jaw.center.x,
  * jaw.center.y, jaw_angle}, {clamp.center.x, clamp.center.y, clamp_angle}}
  */
-std::vector<std::vector<float>> CameraUP::GetPixelPos() {
+std::vector<std::vector<float>> CameraTop::GetPixelPos() {
     cv::Point2f roiP(800, 648);
     std::vector<std::vector<float>> pos;
     // Read(_img);
@@ -272,7 +280,7 @@ std::vector<std::vector<float>> CameraUP::GetPixelPos() {
  * {{jaw.center.x, jaw.center.y, jaw_angle}, {clamp.center.x, clamp.center.y,
  * clamp_angle}}
  */
-std::vector<std::vector<double>> CameraUP::GetPhysicPos() {
+std::vector<std::vector<double>> CameraTop::GetPhysicPos() {
     auto pixelPos = GetPixelPos();
     std::vector<std::vector<double>> physicPos;
     for (auto &p : pixelPos) {
@@ -288,7 +296,7 @@ std::vector<std::vector<double>> CameraUP::GetPhysicPos() {
  * {jaw.center.x - clamp.center.x, jaw.center.y - clamp.center.y, jaw_angle -
  * clamp_angle}
  */
-std::vector<double> CameraUP::GetPhysicError() {
+std::vector<double> CameraTop::GetPhysicError() {
     auto pixelPos = GetPixelPos();
     std::vector<double> posError;
     posError.push_back((pixelPos[0][0] - pixelPos[1][0]) * _mapParam);

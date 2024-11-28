@@ -16,6 +16,8 @@ enum ErrorCode {
     SerialClearBufferError,
     NatorError = 300,
     NatorInitError = 301,
+    NatorSetError,
+    NatorGetError,
     NatorMoveError,
     RMDError = 400,
     RMDInitError = 401,

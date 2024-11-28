@@ -1,15 +1,17 @@
 /**
  * @file NatorMotor.h
+ * @author worranhin (worranhin@foxmail.com)
  * @author drawal (2581478521@qq.com)
- * @brief
- * @version 0.1
- * @date 2024-11-05
+ * @brief Nator Motor Class
+ * @version 0.2
+ * @date 2024-11-28
  *
  * @copyright Copyright (c) 2024
  *
  */
 #pragma once
-#include "SDK/include/NTControl.h"
+#include "NTControl.h"
+#include "RobotException.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <string>
@@ -17,9 +19,9 @@
 
 namespace D5R {
 struct NTU_Point {
-  int x; // 单位: nm
-  int y;
-  int z;
+    int x; // 单位: nm
+    int y;
+    int z;
 };
 
 #define NTU_AXIS_X 3 - 1
@@ -27,22 +29,20 @@ struct NTU_Point {
 #define NTU_AXIS_Z 1 - 1
 
 class NatorMotor {
-public:
-  NatorMotor(std::string id);
-  ~NatorMotor();
-  bool Init();
-  bool SetZero();
-  bool IsInit();
-  bool GetPosition(NTU_Point *p);
-  bool GoToPoint_A(NTU_Point p);
-  void WaitUtilPositioned();
-  bool GoToPoint_R(NTU_Point p);
-  bool Stop();
+  public:
+    NatorMotor(std::string id);
+    ~NatorMotor();
+    void Init();
+    void SetZero();
+    NTU_Point GetPosition();
+    void GoToPoint_A(NTU_Point p);
+    void WaitUtilPositioned();
+    void GoToPoint_R(NTU_Point p);
+    void Stop();
 
-private:
-  NT_INDEX _handle;
-  std::string _id;
-  bool _isInit;
-  unsigned int _status;
+  private:
+    NT_INDEX _handle;
+    std::string _id;
+    unsigned int _status;
 };
 } // namespace D5R

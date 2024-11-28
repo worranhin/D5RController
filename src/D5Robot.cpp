@@ -1,11 +1,21 @@
-﻿#include "D5Robot.h"
+﻿/**
+ * @file D5Robot.cpp
+ * @author worranhin (worranhin@foxmail.com)
+ * @author drawal (2581478521@qq.com)
+ * @brief
+ * @version 0.1
+ * @date 2024-11-28
+ *
+ * @copyright Copyright (c) 2024
+ *
+ */
+#include "D5Robot.h"
 
 namespace D5R {
 
 Joints JAWPOINT{}; // 钳口位置，需要实验确定
 
-D5Robot::D5Robot() {
-}
+D5Robot::D5Robot() {}
 
 D5Robot::D5Robot(
     const char *serialPort,
@@ -16,14 +26,10 @@ D5Robot::D5Robot(
     InitNator(natorID);
     InitRMD(serialPort, topRMDID, botRMDID);
     InitCamera(upCameraID);
-    // _isInit = natorMotor.IsInit();
-    // if (!_isInit) {
-    //     throw RobotException(ErrorCode::CreateInstanceError);
-    // }
 }
 D5Robot::~D5Robot() {
-    delete upCamera;
-    upCamera = nullptr;
+    delete topCamera;
+    topCamera = nullptr;
 }
 
 void D5Robot::InitNator(std::string natorID) {
@@ -47,12 +53,14 @@ void D5Robot::InitRMD(const char *portName, uint8_t topRMDID, uint8_t botRMDID) 
 }
 
 void D5Robot::InitCamera(std::string upCameraId) {
-    upCamera = new CameraUP(upCameraId);
+    topCamera = new CameraTop(upCameraId);
 }
 
-bool D5Robot::IsInit() { return _isInit; }
-
-bool D5Robot::SetZero() {
+/**
+ * @brief 将当前位置设为零点
+ *
+ */
+void D5Robot::SetZero() {
     if (!natorMotor) {
         throw RobotException(ErrorCode::D5RNatorNotInitialized, "In D5Robot::SetZero: natorMotor is not initialized. Call InitNator first.");
     }
@@ -60,21 +68,16 @@ bool D5Robot::SetZero() {
         throw RobotException(ErrorCode::D5RRMDMotorNotInitialized, "In D5Robot::SetZero: RMDMotor is not initialized. Call InitRMD first.");
     }
 
-    if (!natorMotor->SetZero()) {
-        ERROR_("In D5Robot::SetZero: Failed to set nator motor zero");
-        return false;
-    }
-    if (!topRMDMotor->SetZero()) {
-        ERROR_("In D5Robot::SetZero: Failed to set TOP RMD motor zero");
-        return false;
-    }
-    if (!botRMDMotor->SetZero()) {
-        ERROR_("In D5Robot::SetZero: Failed to set BOT RMD motor zero");
-        return false;
-    }
-    return true;
+    natorMotor->SetZero();
+    topRMDMotor->SetZero();
+    botRMDMotor->SetZero();
 }
-bool D5Robot::Stop() {
+
+/**
+ * @brief 电机下电
+ *
+ */
+void D5Robot::Stop() {
     if (!natorMotor) {
         throw RobotException(ErrorCode::D5RNatorNotInitialized, "In D5Robot::Stop: natorMotor is not initialized. Call `InitNator` first.");
     }
@@ -82,22 +85,17 @@ bool D5Robot::Stop() {
         throw RobotException(ErrorCode::D5RRMDMotorNotInitialized, "In D5Robot::Stop: RMDMotor is not initialized. Call `InitRMD` first.");
     }
 
-    if (!natorMotor->Stop()) {
-        ERROR_("Failed to stop nator motor");
-        return false;
-    }
-    if (!topRMDMotor->Stop()) {
-        ERROR_("Failed to stop TOP RMD motor");
-        return false;
-    }
-    if (!botRMDMotor->Stop()) {
-        ERROR_("Failed to stop BOT RMD motor");
-        return false;
-    }
-    return true;
+    natorMotor->Stop();
+    topRMDMotor->Stop();
+    botRMDMotor->Stop();
 }
 
-bool D5Robot::JointsMoveAbsolute(const Joints j) {
+/**
+ * @brief D5R绝对移动
+ *
+ * @param j 目标关节位置
+ */
+void D5Robot::JointsMoveAbsolute(const Joints j) {
     if (!natorMotor) {
         throw RobotException(ErrorCode::D5RNatorNotInitialized, "In D5Robot::JointsMoveAbsolute: natorMotor is not initialized. Call `InitNator` first.");
     }
@@ -106,21 +104,17 @@ bool D5Robot::JointsMoveAbsolute(const Joints j) {
     }
 
     NTU_Point p{j.p2, j.p3, j.p4};
-    if (!natorMotor->GoToPoint_A(p)) {
-        ERROR_("Failed to move nator motor");
-        return false;
-    }
-    if (!topRMDMotor->GoAngleAbsolute(j.r1)) {
-        ERROR_("Failed to move top RMD motor");
-        return false;
-    }
-    if (!botRMDMotor->GoAngleAbsolute(j.r5)) {
-        ERROR_("Failed to move bot RMD motor");
-        return false;
-    }
-    return true;
+    natorMotor->GoToPoint_A(p);
+    topRMDMotor->GoAngleAbsolute(j.r1);
+    botRMDMotor->GoAngleAbsolute(j.r5);
 }
-bool D5Robot::JointsMoveRelative(const Joints j) {
+
+/**
+ * @brief D5R相对移动
+ *
+ * @param j 目标关节距离
+ */
+void D5Robot::JointsMoveRelative(const Joints j) {
     if (!natorMotor) {
         throw RobotException(ErrorCode::D5RNatorNotInitialized, "In D5Robot::JointsMoveRelative: natorMotor is not initialized. Call `InitNator` first.");
     }
@@ -129,35 +123,37 @@ bool D5Robot::JointsMoveRelative(const Joints j) {
     }
 
     NTU_Point p{j.p2, j.p3, j.p4};
-    if (!natorMotor->GoToPoint_R(p)) {
-        ERROR_("Failed to move nator motor");
-        throw RobotException(ErrorCode::NatorMoveError);
-        return false;
-    }
-    if (!topRMDMotor->GoAngleRelative(j.r1)) {
-        ERROR_("Failed to move top RMD motor");
-        throw RobotException(ErrorCode::RMDMoveError);
-        return false;
-    }
-    if (!botRMDMotor->GoAngleRelative(j.r5)) {
-        ERROR_("Failed to move bot RMD motor");
-        throw RobotException(ErrorCode::RMDMoveError);
-        return false;
-    }
-    return true;
+    natorMotor->GoToPoint_R(p);
+    topRMDMotor->GoAngleRelative(j.r1);
+    botRMDMotor->GoAngleRelative(j.r5);
 }
 
-bool D5Robot::TaskMoveAbsolute(const TaskSpace ts) {
+/**
+ * @brief 任务空间绝对位移
+ *
+ * @param ts 任务空间目标
+ */
+void D5Robot::TaskMoveAbsolute(const TaskSpace ts) {
     JointSpace js = KineHelper::Inverse(ts);
-    return JointsMoveAbsolute(js.ToControlJoint());
+    JointsMoveAbsolute(js.ToControlJoint());
 }
 
-bool D5Robot::TaskMoveRelative(const TaskSpace ts) {
+/**
+ * @brief 任务空间相对位移
+ *
+ * @param ts 任务空间距离
+ */
+void D5Robot::TaskMoveRelative(const TaskSpace ts) {
     auto currentPose = GetCurrentPose();
     JointSpace deltaJoint = KineHelper::InverseDifferential(ts, currentPose);
-    return JointsMoveRelative(deltaJoint.ToControlJoint());
+    JointsMoveRelative(deltaJoint.ToControlJoint());
 }
 
+/**
+ * @brief 获取当前关节位置
+ *
+ * @return Joints
+ */
 Joints D5Robot::GetCurrentJoint() {
     if (!natorMotor) {
         throw RobotException(ErrorCode::D5RNatorNotInitialized, "In D5Robot::GetCurrentJoint: natorMotor is not initialized. Call `InitNator` first.");
@@ -171,8 +167,7 @@ Joints D5Robot::GetCurrentJoint() {
     j.r1 = topRMDMotor->GetSingleAngle_s();
     j.r5 = botRMDMotor->GetSingleAngle_s();
 
-    NTU_Point np;
-    this->natorMotor->GetPosition(&np);
+    NTU_Point np = this->natorMotor->GetPosition();
     j.p2 = np.x;
     j.p3 = np.y;
     j.p4 = np.z;
@@ -180,6 +175,11 @@ Joints D5Robot::GetCurrentJoint() {
     return j;
 }
 
+/**
+ * @brief 获取当前任务空间位置
+ *
+ * @return TaskSpace
+ */
 TaskSpace D5Robot::GetCurrentPose() {
     auto joint = GetCurrentJoint();
     JointSpace js(joint);
@@ -187,44 +187,20 @@ TaskSpace D5Robot::GetCurrentPose() {
     return ts;
 }
 
-// Points D5Robot::FwKine(const Joints j) {
-//   double l[5]{38, 11.5, 17.25, 28, 18.1};
-//   Points p{};
-//   p.px = (l[2] + l[4]) * sin(j.r1 * M_PI / 180.0) +
-//          j.p3 * cos(j.r1 * M_PI / 180.0) + j.p2 * sin(j.r1 * M_PI / 180.0);
-//   p.py = -(l[2] + l[4]) * cos(j.r1 * M_PI / 180.0) +
-//          j.p3 * sin(j.r1 * M_PI / 180.0) - j.p2 * cos(j.r1 * M_PI / 180.0);
-//   p.pz = -j.p4 - (l[0] + l[1] + l[3]);
-//   p.ry = j.r1;
-//   p.rz = j.r5;
-//   return p;
-// }
-
-// Joints D5Robot::InvKine(const Points p) {
-//   Joints j{};
-//   j.r1 = p.ry;
-//   j.r5 = p.rz;
-//   j.p2 =
-//       p.px * sin(j.r1 * M_PI / 180.0) - p.py * cos(j.r1 * M_PI / 180.0)
-//       - 35.35;
-//   j.p3 = p.px * cos(j.r1 * M_PI / 180.0) + p.py * sin(j.r1 * M_PI / 180.0);
-//   j.p4 = -p.pz - 77.5;
-//   return j;
-// }
-
-bool D5Robot::VCJawChange() {
+/**
+ * @brief 钳口视觉伺服控制
+ *
+ */
+void D5Robot::VCJawChange() {
     // cv::Mat img;
-    // if (!upCamera.Read(img)) {
+    // if (!topCamera.Read(img)) {
     //     throw RobotException(ErrorCode::CameraReadError);
-    //     return false;
     // }
-    if(!upCamera) {
-        ERROR_("upCamera is not initialized");
-        throw RobotException(ErrorCode::D5RCameraNotInitialized, "upCamera is not initialized");
-        return false;
+    if (!topCamera) {
+        throw RobotException(ErrorCode::D5RCameraNotInitialized, "topCamera is not initialized");
     }
 
-    std::vector<double> posError = upCamera->GetPhysicError();
+    std::vector<double> posError = topCamera->GetPhysicError();
 
     // 插入PID
     TaskSpace pError{-posError[1], -posError[0], 0, 0, posError[2]};
@@ -237,10 +213,9 @@ bool D5Robot::VCJawChange() {
         JointsMoveRelative(jError.ToControlJoint());
         Sleep(500);
         posError.clear();
-        posError = upCamera->GetPhysicError();
+        posError = topCamera->GetPhysicError();
         pError = {-posError[1], -posError[0], 0, 0, posError[2]};
     }
-    return true;
 }
 
 } // namespace D5R
