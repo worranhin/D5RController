@@ -33,6 +33,5 @@ target_include_directories(GalaxyCamera PUBLIC
 target_link_libraries(GalaxyCamera GxAPI)
 target_link_libraries(GalaxyCamera ${OpenCV_LIBS})
 
-# 上方相机类
-add_library(CameraTop src/CameraTop.cpp)
-target_link_libraries(CameraTop GalaxyCamera)
+add_library(Camera src/CameraTop.cpp src/CameraBot.cpp)
+target_link_libraries(Camera GalaxyCamera)

@@ -30,7 +30,7 @@ target_include_directories(D5Robot PUBLIC
     "${CMAKE_SOURCE_DIR}/global")
 target_link_libraries(D5Robot PUBLIC RMDMotor)
 target_link_libraries(D5Robot PUBLIC NatorMotor)
-target_link_libraries(D5Robot PUBLIC CameraTop)
+target_link_libraries(D5Robot PUBLIC Camera)
 
 # 导出 DllAPI
 add_library(D5RbotApi SHARED src/DllApi.cpp)
