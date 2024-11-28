@@ -22,8 +22,8 @@ D5Robot::D5Robot(
     // }
 }
 D5Robot::~D5Robot() {
-    delete upCamera;
-    upCamera = nullptr;
+    delete topCamera;
+    topCamera = nullptr;
 }
 
 void D5Robot::InitNator(std::string natorID) {
@@ -47,7 +47,7 @@ void D5Robot::InitRMD(const char *portName, uint8_t topRMDID, uint8_t botRMDID) 
 }
 
 void D5Robot::InitCamera(std::string upCameraId) {
-    upCamera = new CameraUP(upCameraId);
+    topCamera = new CameraTop(upCameraId);
 }
 
 bool D5Robot::IsInit() { return _isInit; }
@@ -187,44 +187,19 @@ TaskSpace D5Robot::GetCurrentPose() {
     return ts;
 }
 
-// Points D5Robot::FwKine(const Joints j) {
-//   double l[5]{38, 11.5, 17.25, 28, 18.1};
-//   Points p{};
-//   p.px = (l[2] + l[4]) * sin(j.r1 * M_PI / 180.0) +
-//          j.p3 * cos(j.r1 * M_PI / 180.0) + j.p2 * sin(j.r1 * M_PI / 180.0);
-//   p.py = -(l[2] + l[4]) * cos(j.r1 * M_PI / 180.0) +
-//          j.p3 * sin(j.r1 * M_PI / 180.0) - j.p2 * cos(j.r1 * M_PI / 180.0);
-//   p.pz = -j.p4 - (l[0] + l[1] + l[3]);
-//   p.ry = j.r1;
-//   p.rz = j.r5;
-//   return p;
-// }
-
-// Joints D5Robot::InvKine(const Points p) {
-//   Joints j{};
-//   j.r1 = p.ry;
-//   j.r5 = p.rz;
-//   j.p2 =
-//       p.px * sin(j.r1 * M_PI / 180.0) - p.py * cos(j.r1 * M_PI / 180.0)
-//       - 35.35;
-//   j.p3 = p.px * cos(j.r1 * M_PI / 180.0) + p.py * sin(j.r1 * M_PI / 180.0);
-//   j.p4 = -p.pz - 77.5;
-//   return j;
-// }
-
 bool D5Robot::VCJawChange() {
     // cv::Mat img;
-    // if (!upCamera.Read(img)) {
+    // if (!topCamera.Read(img)) {
     //     throw RobotException(ErrorCode::CameraReadError);
     //     return false;
     // }
-    if(!upCamera) {
-        ERROR_("upCamera is not initialized");
-        throw RobotException(ErrorCode::D5RCameraNotInitialized, "upCamera is not initialized");
+    if (!topCamera) {
+        ERROR_("topCamera is not initialized");
+        throw RobotException(ErrorCode::D5RCameraNotInitialized, "topCamera is not initialized");
         return false;
     }
 
-    std::vector<double> posError = upCamera->GetPhysicError();
+    std::vector<double> posError = topCamera->GetPhysicError();
 
     // 插入PID
     TaskSpace pError{-posError[1], -posError[0], 0, 0, posError[2]};
@@ -237,7 +212,7 @@ bool D5Robot::VCJawChange() {
         JointsMoveRelative(jError.ToControlJoint());
         Sleep(500);
         posError.clear();
-        posError = upCamera->GetPhysicError();
+        posError = topCamera->GetPhysicError();
         pError = {-posError[1], -posError[0], 0, 0, posError[2]};
     }
     return true;

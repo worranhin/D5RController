@@ -1,5 +1,4 @@
 #include "D5Robot.h"
-#include "ErrorCode.h"
 #include "RobotException.hpp"
 
 #ifdef D5R_EXPORTS

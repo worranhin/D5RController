@@ -18,11 +18,17 @@ int main() {
     // D5R::D5Robot robot(port.c_str());
     D5R::D5Robot robot;
 
-    try {
-        robot.InitNator(natorID);
-    } catch (D5R::RobotException &e) {
-        std::cout << e.what() << std::endl;
-    }
+    // try {
+    //     robot.InitNator(natorID);
+    // } catch (D5R::RobotException &e) {
+    //     std::cout << e.what() << std::endl;
+    // }
+
+    // try {
+    //     robot.InitRMD(port.c_str());
+    // } catch (D5R::RobotException &e) {
+    //     std::cout << e.what() << std::endl;
+    // }
 
     try {
         robot.InitRMD(port.c_str());
@@ -48,7 +54,7 @@ int main() {
     // robot.JointsMoveAbsolute({0, 500000, 6000000, -7000000, 0});
     // Sleep(5000);
     // int64 start = cv::getTickCount();
-    // robot.upCamera.GetPixelPos();
+    // robot.topCamera.GetPixelPos();
     // int64 end = cv::getTickCount();
     // int64 t = 1000.0 * (end - start) / cv::getTickFrequency();
     // std::cout << t << std::endl;
@@ -59,9 +65,9 @@ int main() {
 
     // cv::Mat img;
     // cv::Point2f roiP(800, 648);
-    // robot.upCamera.Read(img);
+    // robot.topCamera.Read(img);
     // std::vector<cv::Point2f> pos_jaw;
-    // robot.upCamera.SIFT(img, JAW, pos_jaw);
+    // robot.topCamera.SIFT(img, JAW, pos_jaw);
     // float angle_jaw =
     //     atan2f(pos_jaw[1].y - pos_jaw[0].y, pos_jaw[1].x - pos_jaw[0].x) * (-180) / CV_PI;
     // cv::line(img, pos_jaw[0] + roiP, pos_jaw[1] + roiP, cv::Scalar(0), 4);
@@ -79,14 +85,14 @@ int main() {
     cv::namedWindow(winname, cv::WINDOW_NORMAL);
     cv::resizeWindow(winname, cv::Size(1295, 1024));
     int count = 0;
-    while (robot.upCamera->Read(img)) {
+    while (robot.topCamera->Read(img)) {
 
         cv::imshow(winname, img);
         if (cv::waitKey(1) == 27) {
             break;
         }
         if (cv::waitKey(1) == 32) {
-            // robot.upCamera.GetMapParam(img);
+            // robot.topCamera.GetMapParam(img);
             std::string filename =
                 "../image/11_24/topC_clamp_rang_" + std::to_string(count++) + ".png";
             cv::imwrite(filename, img);
@@ -98,7 +104,7 @@ int main() {
 
     // Sleep(5000);
     // int64 start = cv::getTickCount();
-    // robot.upCamera.GetPixelPos();
+    // robot.topCamera.GetPixelPos();
     // int64 end = cv::getTickCount();
     // int64 t = 1000.0 * (end - start) / cv::getTickFrequency();
     // std::cout << t << std::endl;

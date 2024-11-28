@@ -15,18 +15,18 @@ bool GxCamera::Init() {
     // 初始化Lib
     auto status = GXInitLib();
     if (status != GX_STATUS_SUCCESS) {
-        ERROR_("Failed to init the lib, error: %s", GetGxError());
+        throw RobotException(ErrorCode::CameraInitError, "In GxCamera::Init, Failed to init the lib, error: " + std::string(GetGxError()));
         return false;
     }
     // 枚举相机
     uint32_t nums{};
     status = GXUpdateAllDeviceList(&nums, 1000);
     if (status != GX_STATUS_SUCCESS) {
-        ERROR_("Failed to update device list, error: %s", GetGxError());
+        throw RobotException(ErrorCode::CameraInitError, "In GxCamera::Init, Failed to update device list, error: " + std::string(GetGxError()));
         return false;
     }
     if (nums == 0) {
-        ERROR_("Could not find any camera device");
+        throw RobotException(ErrorCode::CameraInitError, "In GxCamera::Init, Could not find any camera device");
         return false;
     }
     PASS_("Success to enum the camera device, num = %d", nums);
@@ -36,7 +36,7 @@ bool GxCamera::Init() {
     size_t base_info_size = nums * sizeof(GX_DEVICE_BASE_INFO);
     status = GXGetAllDeviceBaseInfo(device_info.data(), &base_info_size);
     if (status != GX_STATUS_SUCCESS) {
-        ERROR_("Failed to get device info, error: %s", GetGxError());
+        throw RobotException(ErrorCode::CameraInitError, "In GxCamera::Init, Failed to get device info, error: " + std::string(GetGxError()));
         return false;
     }
 

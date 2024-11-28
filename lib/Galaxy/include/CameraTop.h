@@ -14,10 +14,10 @@ struct Model {
 enum ModelType { JAW = 0,
                  CLAMP = 1 };
 
-class CameraUP : public GxCamera {
+class CameraTop : public GxCamera {
   public:
-    CameraUP(std::string id);
-    ~CameraUP();
+    CameraTop(std::string id);
+    ~CameraTop();
     void GetJawModel(cv::Mat img);
     bool SIFT(cv::Mat img, ModelType modelname, std::vector<cv::Point2f> &pst);
     void GetMapParam(cv::Mat Calibration_board);

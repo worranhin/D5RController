@@ -1,5 +1,5 @@
 #pragma once
-#include "LogUtil.h"
+#include "RobotException.hpp"
 #include <GxIAPI.h>
 #include <iostream>
 #include <opencv2/calib3d.hpp>

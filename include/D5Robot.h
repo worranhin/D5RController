@@ -1,22 +1,14 @@
 #pragma once
-#include "CameraUP.h"
-#include "Joints.h"
+#include "CameraTop.h"
 #include "KineHelper.hpp"
-#include "LogUtil.h"
 #include "NatorMotor.h"
 #include "RMDMotor.h"
-#include "RobotException.hpp"
 #include "SerialPort.h"
 
-namespace D5R {
+#include "LogUtil.h"
+#include "RobotException.hpp"
 
-struct Points {
-    double px;
-    double py;
-    double pz;
-    double ry;
-    double rz;
-};
+namespace D5R {
 
 class D5Robot {
   private:
@@ -26,7 +18,7 @@ class D5Robot {
     NatorMotor *natorMotor;
     RMDMotor *topRMDMotor;
     RMDMotor *botRMDMotor;
-    CameraUP *upCamera = nullptr;
+    CameraTop *topCamera = nullptr;
 
     D5Robot();
     D5Robot(const char *serialPort, std::string natorID = NatorId,
@@ -47,8 +39,6 @@ class D5Robot {
 
     Joints GetCurrentJoint();
     TaskSpace GetCurrentPose();
-    // Points FwKine(const Joints j);
-    // Joints InvKine(const Points p);
 
   private:
     inline static const std::string NatorId = "usb:id:7547982319";
