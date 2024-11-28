@@ -1,5 +1,6 @@
 /**
  * @file NatorMotor.h
+ * @author worranhin (worranhin@foxmail.com)
  * @author drawal (2581478521@qq.com)
  * @brief Nator Motor Class
  * @version 0.2

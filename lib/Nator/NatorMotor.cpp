@@ -1,5 +1,6 @@
 /**
  * @file NatorMotor.cpp
+ * @author worranhin (worranhin@foxmail.com)
  * @author drawal (2581478521@qq.com)
  * @brief Implementation of NatorMotor class
  * @version 0.2

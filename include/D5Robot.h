@@ -1,3 +1,14 @@
+/**
+ * @file D5Robot.h
+ * @author worranhin (worranhin@foxmail.com)
+ * @author drawal (2581478521@qq.com)
+ * @brief
+ * @version 0.1
+ * @date 2024-11-28
+ *
+ * @copyright Copyright (c) 2024
+ *
+ */
 #pragma once
 #include "CameraTop.h"
 #include "KineHelper.hpp"
@@ -28,14 +39,13 @@ class D5Robot {
     void InitNator(std::string natorID = NatorId);
     void InitRMD(const char *portName, uint8_t topRMDID = 1, uint8_t botRMDID = 2);
     void InitCamera(std::string upCameraId = UpCameraId);
-    bool IsInit();
-    bool SetZero();
-    bool Stop();
-    bool JointsMoveAbsolute(const Joints j);
-    bool JointsMoveRelative(const Joints j);
-    bool TaskMoveAbsolute(const TaskSpace ts);
-    bool TaskMoveRelative(const TaskSpace ts);
-    bool VCJawChange();
+    void SetZero();
+    void Stop();
+    void JointsMoveAbsolute(const Joints j);
+    void JointsMoveRelative(const Joints j);
+    void TaskMoveAbsolute(const TaskSpace ts);
+    void TaskMoveRelative(const TaskSpace ts);
+    void VCJawChange();
 
     Joints GetCurrentJoint();
     TaskSpace GetCurrentPose();
@@ -44,7 +54,5 @@ class D5Robot {
     inline static const std::string NatorId = "usb:id:7547982319";
     inline static const std::string UpCameraId = "00-21-49-03-4D-95";
     inline static const std::string BotCameraId = "00-21-49-03-4D-94";
-
-    bool _isInit;
 };
 } // namespace D5R
