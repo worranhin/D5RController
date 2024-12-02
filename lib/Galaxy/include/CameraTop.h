@@ -18,6 +18,7 @@ struct Model {
     cv::Mat img;
     cv::Point2f center;
     cv::Point2f point;
+    cv::Point2f jaw_Circle_Center;
     std::vector<cv::KeyPoint> keypoints;
     cv::Mat descriptors;
 };
@@ -30,6 +31,7 @@ class CameraTop : public GxCamera {
     CameraTop(std::string id);
     ~CameraTop();
     void GetJawModel(cv::Mat img);
+    void GetJawCircleCenter(cv::Mat img);
     bool SIFT(cv::Mat img, ModelType modelname, std::vector<cv::Point2f> &pst);
     void GetMapParam(cv::Mat Calibration_board);
     std::vector<std::vector<float>> GetPixelPos();

@@ -33,6 +33,7 @@ CameraTop::CameraTop(std::string id) : GxCamera(id) {
     _jaw.img = cv::imread(root + "/lib/Galaxy/image/model/jaw_model.png", 0);
     _jaw.center = cv::Point2f(318, 408.5);
     _jaw.point = cv::Point2f(318, 44);
+    _jaw.jaw_Circle_Center = cv::Point2f(318.752, 99.4593);
     cv::FileStorage fs3(root + "/lib/Galaxy/image/yml/KeyPoints_Jaw.yml", cv::FileStorage::READ);
     fs3["keypoints"] >> _jaw.keypoints;
     fs3.release();
@@ -108,6 +109,39 @@ void CameraTop::GetJawModel(cv::Mat img) {
 
     _jaw.center = rect.center;
     _jaw.point = midPoint_up;
+}
+
+/**
+ * @brief 获取钳口圆心坐标，仅作参考使用
+ *
+ * @param img
+ */
+void CameraTop::GetJawCircleCenter(cv::Mat img) {
+    return;
+    cv::Mat gray;
+    cv::cvtColor(img, gray, cv::COLOR_BGR2GRAY);
+    cv::Mat bin;
+    cv::threshold(gray, bin, 60, 255, cv::THRESH_BINARY);
+    cv::Rect roi(220, 60, 200, 80);
+    cv::Mat black = cv::Mat(img.size(), gray.type(), cv::Scalar::all(0));
+    bin(roi).copyTo(black(roi));
+
+    cv::Mat inv_bin;
+    cv::bitwise_not(black, inv_bin);
+
+    cv::Mat edge;
+    cv::Canny(inv_bin, edge, 50, 150);
+
+    std::vector<std::vector<cv::Point>> contours;
+    cv::findContours(edge, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+    std::vector<cv::Point> contours_;
+    for (auto &contour : contours) {
+        contours_.insert(contours_.end(), contour.begin(), contour.end());
+    }
+    cv::Point2f center;
+    float r;
+    cv::minEnclosingCircle(contours_, center, r);
+    _jaw.jaw_Circle_Center = center;
 }
 
 /**
