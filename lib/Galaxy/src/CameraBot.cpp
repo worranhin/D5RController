@@ -24,7 +24,7 @@ CameraBot::CameraBot(std::string id) : GxCamera(id) {
     _points.push_back(cv::Point2f(49.0382, 83.816));
     _points.push_back(cv::Point2f(482.029, 87.0076));
 
-    _mapParam = 0.00945084; // 需要重新标定，只标定高度
+    _mapParam = 0.00943614; // 需要重新标定，只标定高度
 }
 
 /**
