@@ -4,7 +4,7 @@
 #include "RobotException.hpp"
 
 const std::string port = "\\\\.\\COM16";
-const std::string natorID = "usb:id:7547982319";
+const std::string natorID = "usb:id:2250716012";
 
 // int TestMoving();
 // void TestKineHelper();

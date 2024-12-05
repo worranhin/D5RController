@@ -24,9 +24,9 @@ struct NTU_Point {
     int z;
 };
 
-#define NTU_AXIS_X 3 - 1
+#define NTU_AXIS_X 1 - 1
 #define NTU_AXIS_Y 2 - 1
-#define NTU_AXIS_Z 1 - 1
+#define NTU_AXIS_Z 3 - 1
 
 class NatorMotor {
   public:
