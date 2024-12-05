@@ -34,11 +34,11 @@ class D5Robot {
     D5Robot();
     D5Robot(const char *serialPort, std::string natorID = NatorId,
             uint8_t topRMDID = 1, uint8_t botRMDID = 2,
-            std::string upCameraID = UpCameraId);
+            std::string topCameraID = TopCameraId);
     ~D5Robot();
     void InitNator(std::string natorID = NatorId);
     void InitRMD(const char *portName, uint8_t topRMDID = 1, uint8_t botRMDID = 2);
-    void InitCamera(std::string upCameraId = UpCameraId);
+    void InitCamera(std::string topCameraId = TopCameraId);
     void SetZero();
     void Stop();
     void JointsMoveAbsolute(const Joints j);
@@ -52,7 +52,7 @@ class D5Robot {
 
   private:
     inline static const std::string NatorId = "usb:id:2250716012";
-    inline static const std::string UpCameraId = "00-21-49-03-4D-95";
+    inline static const std::string TopCameraId = "00-21-49-03-4D-95";
     inline static const std::string BotCameraId = "00-21-49-03-4D-94";
 };
 } // namespace D5R
