@@ -18,17 +18,11 @@ int main() {
     // D5R::D5Robot robot(port.c_str());
     D5R::D5Robot robot;
 
-    // try {
-    //     robot.InitNator();
-    // } catch (D5R::RobotException &e) {
-    //     std::cout << e.what() << std::endl;
-    // }
-
-    // try {
-    //     robot.InitRMD(port.c_str());
-    // } catch (D5R::RobotException &e) {
-    //     std::cout << e.what() << std::endl;
-    // }
+    try {
+        robot.InitNator();
+    } catch (D5R::RobotException &e) {
+        std::cout << e.what() << std::endl;
+    }
 
     try {
         robot.InitRMD(port.c_str());
@@ -36,18 +30,25 @@ int main() {
         std::cout << e.what() << std::endl;
     }
 
-    try {
-        robot.InitCamera();
-    } catch (D5R::RobotException &e) {
-        std::cout << e.what() << std::endl;
-    }
     // try {
-    //     robot.InitCamera();
+    //     robot.InitTopCamera();
     // } catch (D5R::RobotException &e) {
     //     std::cout << e.what() << std::endl;
     // }
 
-    // robot.JointsMoveAbsolute({300, 4000000, 5000000, -10000000, 0});
+    try {
+        robot.InitBotCamera();
+    } catch (D5R::RobotException &e) {
+        std::cout << e.what() << std::endl;
+    }
+
+    // robot.JointsMoveAbsolute({0, 0, 10000000, 0, 0});
+    // robot.Stop();
+    // robot.topRMDMotor->GoAngleAbsolute(-17700);
+    // robot.topRMDMotor->SetZero();
+    // robot.Stop();
+    // robot.Stop();
+    // robot.SetZero();
     // robot.JointsMoveAbsolute({300, -3650000, 1800000, -10000000, 0}); // 别动
 
     // robot.Stop();
@@ -80,22 +81,40 @@ int main() {
     // cv::waitKey(0);
 
     // 测试相机
-    cv::Mat img;
+    cv::Mat img_top;
     std::string winname = "test";
     cv::namedWindow(winname, cv::WINDOW_NORMAL);
     cv::resizeWindow(winname, cv::Size(1295, 1024));
     int count = 0;
-    while (robot.topCamera->Read(img)) {
+    // while (robot.topCamera->Read(img_top)) {
 
-        cv::imshow(winname, img);
+    //     cv::imshow(winname, img_top);
+    //     if (cv::waitKey(1) == 27) {
+    //         break;
+    //     }
+    //     if (cv::waitKey(1) == 32) {
+    //         // robot.topCamera.GetMapParam(img_top);
+    //         std::string filename =
+    //             "../image/11_24/topC_clamp_rang_" + std::to_string(count++) + ".png";
+    //         cv::imwrite(filename, img_top);
+    //         // std::cout << count++ << std::endl;
+    //         continue;
+    //     }
+    // }
+    // cv::waitKey(0);
+    cv::Mat img_bot;
+    count = 0;
+    while (robot.botCamera->Read(img_bot)) {
+
+        cv::imshow(winname, img_bot);
         if (cv::waitKey(1) == 27) {
             break;
         }
         if (cv::waitKey(1) == 32) {
-            // robot.topCamera.GetMapParam(img);
+            // robot.topCamera.GetMapParam(img_bot);
             std::string filename =
                 "../image/11_24/topC_clamp_rang_" + std::to_string(count++) + ".png";
-            cv::imwrite(filename, img);
+            cv::imwrite(filename, img_bot);
             // std::cout << count++ << std::endl;
             continue;
         }
