@@ -13,6 +13,8 @@
 
 namespace D5R {
 
+int GxCamera::_instanceNum = 0;
+
 /**
  * @brief Construct a new Gx Camera:: Gx Camera object
  *
@@ -37,10 +39,14 @@ const char *GxCamera::GetGxError() {
  *
  */
 void GxCamera::Init() {
+    GX_STATUS status;
+
     // 初始化Lib
-    auto status = GXInitLib();
-    if (status != GX_STATUS_SUCCESS) {
-        throw RobotException(ErrorCode::CameraInitError, "In GxCamera::Init, Failed to init the lib, error: " + std::string(GetGxError()));
+    if (GxCamera::_instanceNum++ == 0) { // 若 _instanceNum != 0, 代表已经  InitLib 则跳过这一步
+        status = GXInitLib();
+        if (status != GX_STATUS_SUCCESS) {
+            throw RobotException(ErrorCode::CameraInitError, "In GxCamera::Init, Failed to init the lib, error: " + std::string(GetGxError()));
+        }
     }
     // 枚举相机
     uint32_t nums{};
@@ -209,7 +215,10 @@ void GxCamera::Release() {
     if (status != GX_STATUS_SUCCESS) {
         ERROR_("Failed to close camera, error: %s", GetGxError());
     }
-    GXCloseLib();
+
+    if (--GxCamera::_instanceNum == 0) { // 如果全部相机都已注销，则 CloseLib
+        GXCloseLib();
+    }
 }
 
 GxCamera::~GxCamera() { Release(); }

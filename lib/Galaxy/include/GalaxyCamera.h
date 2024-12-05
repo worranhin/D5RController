@@ -43,5 +43,7 @@ class GxCamera {
     int64_t _payload{};
     cv::Mat _map1{};
     cv::Mat _map2{};
+
+    static int _instanceNum;
 };
 } // namespace D5R
