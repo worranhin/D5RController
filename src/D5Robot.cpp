@@ -28,8 +28,14 @@ D5Robot::D5Robot(
     InitCamera(topCameraID);
 }
 D5Robot::~D5Robot() {
-    delete topCamera;
-    topCamera = nullptr;
+    if (topCamera != nullptr) {
+        delete topCamera;
+        topCamera = nullptr;
+    }
+    if (botCamera != nullptr) {
+        delete botCamera;
+        botCamera = nullptr;
+    }
 }
 
 void D5Robot::InitNator(std::string natorID) {
@@ -52,8 +58,9 @@ void D5Robot::InitRMD(const char *portName, uint8_t topRMDID, uint8_t botRMDID) 
     botRMDMotor = new RMDMotor(_port->GetHandle(), botRMDID);
 }
 
-void D5Robot::InitCamera(std::string topCameraId) {
+void D5Robot::InitCamera(std::string topCameraId, std::string botCameraId) {
     topCamera = new CameraTop(topCameraId);
+    botCamera = new CameraBot(botCameraId);
 }
 
 /**

@@ -4,7 +4,7 @@
 #include "RobotException.hpp"
 
 const std::string port = "\\\\.\\COM16";
-const std::string natorID = "usb:id:2250716012";
+// const std::string natorID = "usb:id:2250716012";
 
 // int TestMoving();
 // void TestKineHelper();
@@ -19,7 +19,7 @@ int main() {
     D5R::D5Robot robot;
 
     // try {
-    //     robot.InitNator(natorID);
+    //     robot.InitNator();
     // } catch (D5R::RobotException &e) {
     //     std::cout << e.what() << std::endl;
     // }
@@ -37,7 +37,7 @@ int main() {
     }
 
     try {
-        robot.InitCamera("00-21-49-03-4D-95");
+        robot.InitCamera();
     } catch (D5R::RobotException &e) {
         std::cout << e.what() << std::endl;
     }

@@ -10,6 +10,7 @@
  *
  */
 #pragma once
+#include "CameraBot.h"
 #include "CameraTop.h"
 #include "KineHelper.hpp"
 #include "NatorMotor.h"
@@ -30,6 +31,7 @@ class D5Robot {
     RMDMotor *topRMDMotor;
     RMDMotor *botRMDMotor;
     CameraTop *topCamera = nullptr;
+    CameraBot *botCamera = nullptr;
 
     D5Robot();
     D5Robot(const char *serialPort, std::string natorID = NatorId,
@@ -38,7 +40,7 @@ class D5Robot {
     ~D5Robot();
     void InitNator(std::string natorID = NatorId);
     void InitRMD(const char *portName, uint8_t topRMDID = 1, uint8_t botRMDID = 2);
-    void InitCamera(std::string topCameraId = TopCameraId);
+    void InitCamera(std::string topCameraId = TopCameraId, std::string botCameraId = BotCameraId);
     void SetZero();
     void Stop();
     void JointsMoveAbsolute(const Joints j);
