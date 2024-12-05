@@ -22,6 +22,7 @@ class CameraBot : public GxCamera {
     std::vector<float> GetHorizontalLine(cv::Mat img);
     std::vector<cv::Point2f> GetModelPoints(cv::Mat img);
     double GetDistance(cv::Mat img, std::vector<float> line_params);
+    void GetMapParam(cv::Mat Calibration_board);
 
   private:
     double _mapParam;

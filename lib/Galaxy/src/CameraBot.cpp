@@ -124,5 +124,43 @@ double CameraBot::GetDistance(cv::Mat img, std::vector<float> line_params) {
     return distance * _mapParam + 0.3;
 }
 
+/**
+ * @brief 获取相机映射参数，只标定z轴
+ *
+ * @param Calibration_board 标定板图，灰度
+ */
+void CameraBot::GetMapParam(cv::Mat Calibration_board) {
+    std::vector<cv::Point2f> corner;
+    if (!cv::findChessboardCorners(Calibration_board, cv::Size(19, 15), corner)) {
+        std::cerr << "Failed to find corners in image" << std::endl;
+        return;
+    }
+    const cv::TermCriteria criteria{cv::TermCriteria::EPS | cv::TermCriteria::COUNT, 30, 0.001};
+    cv::cornerSubPix(Calibration_board, corner, cv::Size(6, 6), cv::Size(-1, -1), criteria);
+    cv::drawChessboardCorners(Calibration_board, cv::Size(19, 15), corner, true);
+
+    std::string imagename = "Calibration_board";
+    cv::namedWindow(imagename, cv::WINDOW_NORMAL);
+    cv::resizeWindow(imagename, cv::Size(1295, 1024));
+    cv::imshow(imagename, Calibration_board);
+
+    float sum = 0;
+    cv::Point2f last_point{};
+    for (int i = 0; i < 19; ++i) {
+        for (int j = 0; j < 15; ++j) {
+            if (j == 0) {
+                last_point = corner[j * 19 + i];
+                continue;
+            }
+            auto a = sqrt(powf(corner[j * 19 + i].x - last_point.x, 2) + powf(corner[j * 19 + i].y - last_point.y, 2));
+            sum += a;
+            last_point = corner[j * 19 + i];
+        }
+    }
+    float map_param = 14 * 19 / sum;
+    std::cout << "map_param: " << map_param << " (mm/pixel)" << std::endl;
+    cv::waitKey(0);
+}
+
 CameraBot::~CameraBot() {}
 } // namespace D5R

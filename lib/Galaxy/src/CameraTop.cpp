@@ -173,10 +173,12 @@ bool D5R::CameraTop::SIFT(cv::Mat image, ModelType modelname,
         keyPoints_Model = _jaw.keypoints;
         descriptors_model = _jaw.descriptors;
     }
+
     // ROI
-    cv::Point2f roiP(800, 648);
-    cv::Rect roi = cv::Rect(roiP, cv::Size(750, 1400));
+    cv::Point2f roiP(450, 700);
+    cv::Rect roi = cv::Rect(roiP, cv::Size(750, 1348));
     cv::Mat ROI = image(roi).clone();
+
     // SIFT特征点
     cv::Ptr<cv::SIFT> sift = cv::SIFT::create();
     std::vector<cv::KeyPoint> keyPoints_Img;

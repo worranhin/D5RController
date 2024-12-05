@@ -2,12 +2,13 @@
 
 int main() {
     cv::Mat model = cv::imread("../image/11_22/jaw_model.png", 0);
-    cv::Mat image = cv::imread("../image/11_22/jaw0.png");
+    cv::Mat image = cv::imread("../image/12_5/top_1.png");
     if (image.empty()) {
         std::cerr << "Failed to load model " << std::endl;
         return -1;
     }
-    cv::Rect roi = cv::Rect(800, 648, 750, 1400);
+    cv::Point2f D(450, 700);
+    cv::Rect roi = cv::Rect(450, 700, 750, 1348);
     cv::Mat ROI = image(roi).clone();
 
     cv::Ptr<cv::SIFT> sift = cv::SIFT::create();
@@ -61,9 +62,9 @@ int main() {
     std::vector<cv::Point2f> modelPosition = {cv::Point2f(318, 408.5), cv::Point2f(318, 44)};
     std::vector<cv::Point2f> ImgPosition;
     cv::perspectiveTransform(modelPosition, ImgPosition, homography);
-    cv::line(image, ImgPosition[0] + cv::Point2f(800, 648), ImgPosition[1] + cv::Point2f(800, 648), cv::Scalar(0, 0, 255), 2);
+    cv::line(image, ImgPosition[0] + D, ImgPosition[1] + D, cv::Scalar(0, 0, 255), 2);
     float angle = atan2f((ImgPosition[0].y - ImgPosition[1].y), (ImgPosition[0].x - ImgPosition[1].x)) * (-180) / CV_PI;
-    cv::putText(image, std::to_string(angle), ImgPosition[0] + cv::Point2f(800, 648), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 255), 2);
+    cv::putText(image, std::to_string(angle), ImgPosition[0] + D, cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 255), 2);
 
     int64 end = cv::getTickCount();
     std::cout << 1000.0 * (end - start) / cv::getTickFrequency() << std::endl;
@@ -71,7 +72,7 @@ int main() {
     cv::Mat img_matches_knn;
     cv::drawMatches(model, keyPoints_Model, ROI, keyPoints_Img, goodMatches, img_matches_knn, cv::Scalar::all(-1),
                     cv::Scalar::all(-1), std::vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
-    cv::imwrite("../image/11_22/res_match_knn_0452.png", img_matches_knn);
+    cv::imwrite("../image/12_5/res_match_knn_0452.png", img_matches_knn);
     std::string windowname2 = "Match res";
     cv::namedWindow(windowname2, cv::WINDOW_NORMAL);
     cv::resizeWindow(windowname2, cv::Size(1295, 1024));
