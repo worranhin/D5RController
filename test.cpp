@@ -42,7 +42,7 @@ int main() {
         std::cout << e.what() << std::endl;
     }
 
-    // robot.JointsMoveAbsolute({0, 0, 10000000, 0, 0});
+    // robot.JointsMoveAbsolute({0, 0, 8000000, 0, 0});
     // robot.Stop();
     // robot.topRMDMotor->GoAngleAbsolute(-17700);
     // robot.topRMDMotor->SetZero();
@@ -81,13 +81,15 @@ int main() {
     // cv::waitKey(0);
 
     // 测试相机
-    cv::Mat img_top;
     std::string winname = "test";
     cv::namedWindow(winname, cv::WINDOW_NORMAL);
     cv::resizeWindow(winname, cv::Size(1295, 1024));
-    int count = 0;
+    int count = 10;
+
+    // cv::Mat img_top;
     // while (robot.topCamera->Read(img_top)) {
 
+    //     // cv::line(img_top, cv::Point(100, 1600), cv::Point(1800, 1600), cv::Scalar(0), 2);
     //     cv::imshow(winname, img_top);
     //     if (cv::waitKey(1) == 27) {
     //         break;
@@ -95,16 +97,18 @@ int main() {
     //     if (cv::waitKey(1) == 32) {
     //         // robot.topCamera.GetMapParam(img_top);
     //         std::string filename =
-    //             "../image/11_24/topC_clamp_rang_" + std::to_string(count++) + ".png";
+    //             "../image/12_6/topC_" + std::to_string(count++) + ".png";
     //         cv::imwrite(filename, img_top);
     //         // std::cout << count++ << std::endl;
     //         continue;
     //     }
     // }
     // cv::waitKey(0);
+
     cv::Mat img_bot;
     count = 0;
     while (robot.botCamera->Read(img_bot)) {
+        // cv::line(img_bot, cv::Point(100, 1700), cv::Point(1800, 1700), cv::Scalar(255), 2);
 
         cv::imshow(winname, img_bot);
         if (cv::waitKey(1) == 27) {
@@ -113,7 +117,7 @@ int main() {
         if (cv::waitKey(1) == 32) {
             // robot.topCamera.GetMapParam(img_bot);
             std::string filename =
-                "../image/11_24/topC_clamp_rang_" + std::to_string(count++) + ".png";
+                "../image/12_6/botC_" + std::to_string(count++) + ".png";
             cv::imwrite(filename, img_bot);
             // std::cout << count++ << std::endl;
             continue;
