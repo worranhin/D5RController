@@ -1,9 +1,17 @@
 #pragma once
 
-#include "JointSpace.hpp"
-#include "KineHelper.hpp"
+// #include "JointSpace.hpp"
+// #include "KineHelper.hpp"
 
 namespace D5R {
+
+struct Points {
+    double px;
+    double py;
+    double pz;
+    double ry;
+    double rz;
+};
 
 class TaskSpace {
 

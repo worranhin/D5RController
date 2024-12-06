@@ -3,121 +3,44 @@
  * @author worranhin (worranhin@foxmail.com)
  * @author drawal (2581478521@qq.com)
  * @brief Implementation of RMDMotor class
- * @version 0.1
- * @date 2024-11-05
+ * @version 0.2
+ * @date 2024-11-28
  *
  * @copyright Copyright (c) 2024
  *
  */
 #include "RMDMotor.h"
-#include "LogUtil.h"
-#include "RobotException.hpp"
-
 namespace D5R {
 
 /**
- * Construct a RMDMotor object.
+ * @brief Construct a new RMDMotor::RMDMotor object
  *
- * @param serialPort The name of the serial port. e.g. "COM1"
- * @param id The ID of the motor. e.g. 0x01
- *
- * !! Deprecate !!
- * The constructor will try to initialize the serial port and get the PI
- * parameters of the motor. If the serial port is invalid, the constructor
- * will print an error message and set the _isInit flag to false.
  */
 RMDMotor::RMDMotor() {}
-RMDMotor::RMDMotor(const char *serialPort, uint8_t id)
-    : _serialPort(serialPort), _id(id) {
-    _isInit = Init();
-    GetPI();
-    if (!_isInit) {
-        ERROR_("Fail to init RMDMotor");
-    }
-}
 
 /**
- * Construct a RMDMotor object using a handle to a serial port.
+ * @brief Construct a new RMDMotor::RMDMotor object
  *
- * @param comHandle The handle of the serial port.
- * @param id The ID of the motor. e.g. 0x01
- *
- * The constructor will not try to initialize the serial port. The caller
- * should ensure that the serial port is valid and the handle is a valid
- * handle to the serial port.
+ * @param comHandle 串口句柄，由SerialPort获取
+ * @param id 电机ID，如0x01， 0x02
  */
 RMDMotor::RMDMotor(HANDLE comHandle, uint8_t id) : _id(id) {
     _handle = comHandle;
     GetPI();
-    _isInit = true;
 }
 
 /**
- * Destructor of RMDMotor object.
+ * @brief Destroy the RMDMotor::RMDMotor object
  *
- * The destructor will close the handle of the serial port.
  */
 RMDMotor::~RMDMotor() {}
 
-// 句柄初始化-----------------------------------------
-bool RMDMotor::Init() {
-    _handle = CreateFileA(_serialPort, GENERIC_READ | GENERIC_WRITE, 0, 0,
-                          OPEN_EXISTING, 0, 0);
-    if (_handle == INVALID_HANDLE_VALUE) {
-        ERROR_("Invalid serialport");
-        return false;
-    }
-
-    BOOL bSuccess = SetupComm(_handle, 100, 100);
-    if (!bSuccess) {
-        ERROR_("Failed to init serial device buffer");
-        return false;
-    }
-
-    COMMTIMEOUTS commTimeouts = {0};
-    commTimeouts.ReadIntervalTimeout = 50;         // 读取时间间隔超时
-    commTimeouts.ReadTotalTimeoutConstant = 100;   // 总读取超时
-    commTimeouts.ReadTotalTimeoutMultiplier = 10;  // 读取超时乘数
-    commTimeouts.WriteTotalTimeoutConstant = 100;  // 总写入超时
-    commTimeouts.WriteTotalTimeoutMultiplier = 10; // 写入超时乘数
-
-    bSuccess = SetCommTimeouts(_handle, &commTimeouts);
-    if (!bSuccess) {
-        ERROR_("Failed to config Timeouts value");
-        return false;
-    }
-
-    DCB dcbSerialParams = {0};
-    dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
-    if (!GetCommState(_handle, &dcbSerialParams)) {
-        ERROR_("Failed to obtain device comm status");
-        return false;
-    }
-    dcbSerialParams.BaudRate = CBR_115200;
-    dcbSerialParams.ByteSize = 8;
-    dcbSerialParams.StopBits = ONESTOPBIT;
-    dcbSerialParams.Parity = NOPARITY;
-    if (!SetCommState(_handle, &dcbSerialParams)) {
-        ERROR_("Failed to config DCB");
-        return false;
-    }
-
-    return true;
-}
-
-// 是否初始化-----------------------------------------
-bool RMDMotor::isInit() { return _isInit; }
-
-// 设备重连------------------------------------------
-bool RMDMotor::Reconnect() {
-    if (_handle != nullptr) {
-        CloseHandle(_handle);
-    }
-    return Init();
-}
-
-// 获取当前角度---------------------------------------
-bool RMDMotor::GetMultiAngle_s(int64_t *angle) {
+/**
+ * @brief 获取RMD多圈角度
+ *
+ * @return int64_t angle
+ */
+int64_t RMDMotor::GetMultiAngle_s() {
     uint8_t command[] = {0x3E, 0x92, 0x00, 0x00, 0x00};
     command[2] = _id;
     command[4] = GetHeaderCheckSum(command);
@@ -126,40 +49,31 @@ bool RMDMotor::GetMultiAngle_s(int64_t *angle) {
     int64_t motorAngle = 0;
 
     if (!PurgeComm(_handle, PURGE_RXCLEAR)) {
-        throw RobotException(ErrorCode::SerialClearBufferError);
+        throw RobotException(ErrorCode::SerialClearBufferError, "In RMDMotor::GetMultiAngle_s, ");
     }
 
     if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
-        ERROR_("GetMultiAngle_s: Failed to send command to device");
-        return false;
+        throw RobotException(ErrorCode::SerialSendError, "In RMDMotor::GetMultiAngle_s, ");
     }
 
     if (!ReadFile(_handle, readBuf, bytesToRead, &_bytesRead, NULL)) {
-        ERROR_("GetMultiAngle_s: Failed to revice data from device");
-        return false;
+        throw RobotException(ErrorCode::SerialReceiveError, "In RMDMotor::GetMultiAngle_s, ");
     }
 
     // check received length
     if (_bytesRead != bytesToRead) {
-        ERROR_("GetMultiAngle_s: Abnormal received data - byte count");
-        return false;
+        throw RobotException(ErrorCode::SerialReceiveError_LessThanExpected, "In RMDMotor::GetMultiAngle_s, ");
     }
 
     // check received format
     if (readBuf[0] != 0x3E || readBuf[1] != 0x92 || readBuf[2] != _id ||
         readBuf[3] != 0x08 || readBuf[4] != (0x3E + 0x92 + _id + 0x08)) {
-        ERROR_("GetMultiAngle_s: Abnormal received data - frame header");
-        return false;
+        throw RobotException(ErrorCode::RMDFormatError, "In RMDMotor::GetMultiAngle_s, ");
     }
 
     // check data sum
-    uint8_t sum = 0;
-    for (int i = 5; i < 13; i++) {
-        sum += readBuf[i];
-    }
-    if (sum != readBuf[13]) {
-        ERROR_("GetMultiAngle_s: Abnormal received data - data");
-        return false;
+    if (_checksum(readBuf, 5, 13) != readBuf[13]) {
+        throw RobotException(ErrorCode::RMDChecksumError, "In RMDMotor::GetMultiAngle_s, ");
     }
 
     // motorAngle = readBuf[5] | (readBuf[6] << 8) | (readBuf[7] << 16) |
@@ -173,10 +87,14 @@ bool RMDMotor::GetMultiAngle_s(int64_t *angle) {
     *((uint8_t *)(&motorAngle) + 6) = readBuf[11];
     *((uint8_t *)(&motorAngle) + 7) = readBuf[12];
 
-    *angle = motorAngle;
-    return true;
+    return motorAngle;
 }
 
+/**
+ * @brief 获取RMD单圈角度
+ *
+ * @return uint16_t angle
+ */
 uint16_t RMDMotor::GetSingleAngle_s() {
     uint8_t command[5] = {0x3E, 0x94, 0x00, 0x00, 0x00};
     command[2] = _id;
@@ -186,31 +104,31 @@ uint16_t RMDMotor::GetSingleAngle_s() {
     uint8_t readBuf[bytesToRead];
 
     if (!PurgeComm(_handle, PURGE_RXCLEAR)) {
-        throw RobotException(ErrorCode::SerialClearBufferError);
+        throw RobotException(ErrorCode::SerialClearBufferError, "In RMDMotor::GetSingleAngle_s, ");
     }
 
     if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
-        throw RobotException(ErrorCode::SerialSendError);
+        throw RobotException(ErrorCode::SerialSendError, "In RMDMotor::GetSingleAngle_s, ");
     }
 
     if (!ReadFile(_handle, readBuf, bytesToRead, &_bytesRead, NULL)) {
-        throw RobotException(ErrorCode::SerialReceiveError);
+        throw RobotException(ErrorCode::SerialReceiveError, "In RMDMotor::GetSingleAngle_s, ");
     }
 
     // check received length
     if (_bytesRead != bytesToRead) {
-        throw RobotException(ErrorCode::SerialReceiveError_LessThanExpected);
+        throw RobotException(ErrorCode::SerialReceiveError_LessThanExpected, "In RMDMotor::GetSingleAngle_s, ");
     }
 
     // check received format
     if (readBuf[0] != 0x3E || readBuf[1] != 0x94 || readBuf[2] != _id ||
         readBuf[3] != 0x02 || readBuf[4] != _checksum(readBuf, 0, 4)) {
-        throw RobotException(ErrorCode::RMDFormatError);
+        throw RobotException(ErrorCode::RMDFormatError, "In RMDMotor::GetSingleAngle_s, ");
     }
 
     // check data sum
     if (_checksum(readBuf, 5, 7) != readBuf[7]) {
-        throw RobotException(ErrorCode::RMDChecksumError);
+        throw RobotException(ErrorCode::RMDChecksumError, "In RMDMotor::GetSingleAngle_s, ");
     }
 
     uint16_t circleAngle = 0;
@@ -220,7 +138,12 @@ uint16_t RMDMotor::GetSingleAngle_s() {
     return circleAngle;
 }
 
-// 帧头计算------------------------------------------
+/**
+ * @brief 帧头计算
+ *
+ * @param command 需计算的命令
+ * @return uint8_t sum 累计帧头
+ */
 uint8_t RMDMotor::GetHeaderCheckSum(uint8_t *command) {
     uint8_t sum = 0x00;
     for (int i = 0; i < 4; ++i) {
@@ -229,8 +152,12 @@ uint8_t RMDMotor::GetHeaderCheckSum(uint8_t *command) {
     return sum;
 }
 
-// 旋转角度-绝对---------------------------------------
-bool RMDMotor::GoAngleAbsolute(int64_t angle) {
+/**
+ * @brief RMD绝对转动
+ *
+ * @param angle 目标角度
+ */
+void RMDMotor::GoAngleAbsolute(int64_t angle) {
     int64_t angleControl = angle;
     uint8_t checksum = 0;
 
@@ -255,16 +182,16 @@ bool RMDMotor::GoAngleAbsolute(int64_t angle) {
     command[13] = checksum;
 
     if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
-        ERROR_("GoToAngle: Failed to send command to device");
-        auto err = GetLastError();
-        std::cerr << err << std::endl;
-        return false;
+        throw RobotException(ErrorCode::SerialSendError, "In RMDMotor::GoAngleAbsolute, ");
     }
-    return true;
 }
 
-// 旋转角度-相对--------------------------------------
-bool RMDMotor::GoAngleRelative(int64_t angle) {
+/**
+ * @brief RMD相对转动
+ *
+ * @param angle 目标角度
+ */
+void RMDMotor::GoAngleRelative(int64_t angle) {
     int64_t deltaAngle = angle;
     uint8_t checksum = 0;
 
@@ -283,10 +210,8 @@ bool RMDMotor::GoAngleRelative(int64_t angle) {
     command[9] = checksum;
 
     if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
-        ERROR_("GoToAngle_R: Failed to send command to device");
-        return false;
+        throw RobotException(ErrorCode::SerialSendError, "In RMDMotor::GoAngleRelative, ");
     }
-    return true;
 }
 
 /**
@@ -320,31 +245,31 @@ int16_t RMDMotor::OpenLoopControl(int16_t power) {
     uint8_t readBuf[bytesToRead];
 
     if (!PurgeComm(_handle, PURGE_RXCLEAR)) {
-        throw RobotException(ErrorCode::SerialClearBufferError);
+        throw RobotException(ErrorCode::SerialClearBufferError, "In RMDMotor::OpenLoopControl, ");
     }
 
     if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
-        throw RobotException(ErrorCode::SerialSendError);
+        throw RobotException(ErrorCode::SerialSendError, "In RMDMotor::OpenLoopControl, ");
     }
 
     if (!ReadFile(_handle, readBuf, bytesToRead, &_bytesRead, NULL)) {
-        throw RobotException(ErrorCode::SerialReceiveError);
+        throw RobotException(ErrorCode::SerialReceiveError, "In RMDMotor::OpenLoopControl, ");
     }
 
     // check received length
     if (_bytesRead != bytesToRead) {
-        throw RobotException(ErrorCode::SerialReceiveError_LessThanExpected);
+        throw RobotException(ErrorCode::SerialReceiveError_LessThanExpected, "In RMDMotor::OpenLoopControl, ");
     }
 
     // check received format
     if (readBuf[0] != 0x3E || readBuf[1] != 0xA0 || readBuf[2] != _id ||
         readBuf[3] != 0x07 || readBuf[4] != _checksum(readBuf, 0, 4)) {
-        throw RobotException(ErrorCode::RMDFormatError);
+        throw RobotException(ErrorCode::RMDFormatError, "In RMDMotor::OpenLoopControl, ");
     }
 
     // check data sum
     if (_checksum(readBuf, 5, 12) != readBuf[12]) {
-        throw RobotException(ErrorCode::RMDChecksumError);
+        throw RobotException(ErrorCode::RMDChecksumError, "In RMDMotor::OpenLoopControl, ");
     }
 
     int16_t speed = 0;
@@ -376,57 +301,62 @@ void RMDMotor::SpeedControl(int32_t speed) {
     uint8_t readBuf[bytesToRead];
 
     if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
-        throw RobotException(ErrorCode::SerialSendError);
+        throw RobotException(ErrorCode::SerialSendError, "In RMDMotor::SpeedControl, ");
     }
 
     if (!ReadFile(_handle, readBuf, bytesToRead, &_bytesRead, NULL)) {
-        throw RobotException(ErrorCode::SerialReceiveError);
+        throw RobotException(ErrorCode::SerialReceiveError, "In RMDMotor::SpeedControl, ");
     }
 
     // check received length
     if (_bytesRead != bytesToRead) {
-        throw RobotException(ErrorCode::SerialReceiveError_LessThanExpected);
+        throw RobotException(ErrorCode::SerialReceiveError_LessThanExpected, "In RMDMotor::SpeedControl, ");
     }
 
     // check received format
     if (readBuf[0] != 0x3E || readBuf[1] != 0xA2 || readBuf[2] != _id ||
         readBuf[3] != 0x07 || readBuf[4] != _checksum(readBuf, 0, 4)) {
-        throw RobotException(ErrorCode::RMDFormatError);
+        throw RobotException(ErrorCode::RMDFormatError, "In RMDMotor::SpeedControl, ");
     }
 
     // check data sum
     if (_checksum(readBuf, 5, 12) != readBuf[12]) {
-        throw RobotException(ErrorCode::RMDChecksumError);
+        throw RobotException(ErrorCode::RMDChecksumError, "In RMDMotor::SpeedControl, ");
     }
 }
 
-// 急停----------------------------------------------
-bool RMDMotor::Stop() {
+/**
+ * @brief RMD下电
+ *
+ */
+void RMDMotor::Stop() {
     uint8_t command[] = {0x3E, 0x81, 0x00, 0x00, 0x00};
     command[2] = _id;
     command[4] = GetHeaderCheckSum(command);
     if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
-        ERROR_("Stop: Failed to send command to device");
-        return false;
+        throw RobotException(ErrorCode::SerialSendError, "In RMDMotor::Stop, ");
     }
-    return true;
 }
 
-// 将当前位置设置为电机零点-----------------------------
-// 注意：该方法需要重新上电才能生效，且不建议频繁使用，会损害电机寿命。
-bool RMDMotor::SetZero() {
+/**
+ * @brief 将当前位置设置为电机零点
+ *
+ * @attention 该方法需要重新上电才能生效，且不建议频繁使用，会损害电机寿命。
+ */
+void RMDMotor::SetZero() {
     uint8_t command[] = {0x3E, 0x19, 0x00, 0x00, 0x00};
     command[2] = _id;
     command[4] = GetHeaderCheckSum(command);
     if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
-        ERROR_("SetZero: Failed to send command to device");
-        return false;
+        throw RobotException(ErrorCode::SerialSendError, "In RMDMotor::SetZero, ");
     }
-    return true;
 }
 
-// 获取PI参数-----------------------------------------
-bool RMDMotor::GetPI() {
+/**
+ * @brief 获取RMD PI参数
+ *
+ */
+void RMDMotor::GetPI() {
     uint8_t command[] = {0x3E, 0X30, 0x00, 0x00, 0x00};
     command[2] = _id;
     command[4] = GetHeaderCheckSum(command);
@@ -434,44 +364,28 @@ bool RMDMotor::GetPI() {
     uint8_t readBuf[bytesToRead];
 
     if (!PurgeComm(_handle, PURGE_RXCLEAR)) {
-        throw RobotException(ErrorCode::SerialClearBufferError);
+        throw RobotException(ErrorCode::SerialClearBufferError, "In RMDMotor::GetPI, ");
     }
 
     if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
-        ERROR_("GetPI: Failed to send command to device");
-        // ERROR_(GetLastError)
-        std::cerr << GetLastError() << std::endl;
-        throw RobotException(ErrorCode::SerialSendError);
-        return false;
+        throw RobotException(ErrorCode::SerialSendError, "In RMDMotor::GetPI, ");
     }
 
     if (!ReadFile(_handle, readBuf, bytesToRead, &_bytesRead, NULL)) {
-        ERROR_("GetPI: Failed to revice data from device");
-        throw RobotException(ErrorCode::SerialReceiveError);
-        return false;
+        throw RobotException(ErrorCode::SerialReceiveError, "In RMDMotor::GetPI, ");
     }
 
     if (_bytesRead != bytesToRead) {
-        ERROR_("GetPI: Abnormal received data - byte count");
-        throw RobotException(ErrorCode::RMDGetPIError);
-        return false;
+        throw RobotException(ErrorCode::SerialReceiveError_LessThanExpected, "In RMDMotor::GetPI, ");
     }
 
     if (readBuf[0] != 0x3E || readBuf[1] != 0x30 || readBuf[2] != _id ||
         readBuf[3] != 0x06 || readBuf[4] != (0x3E + 0x30 + _id + 0x06)) {
-        ERROR_("GetPI: Abnormal received data - frame header");
-        throw RobotException(ErrorCode::RMDGetPIError);
-        return false;
+        throw RobotException(ErrorCode::RMDFormatError, "In RMDMotor::GetPI, ");
     }
 
-    uint8_t sum = 0;
-    for (int i = 5; i < 11; i++) {
-        sum += readBuf[i];
-    }
-    if (sum != readBuf[11]) {
-        ERROR_("GetPI: Abnormal received data - data");
-        throw RobotException(ErrorCode::RMDGetPIError);
-        return false;
+    if (_checksum(readBuf, 5, 11) != readBuf[11]) {
+        throw RobotException(ErrorCode::RMDChecksumError, "In RMDMotor::GetPI, ");
     }
 
     _piParam.angleKp = (uint8_t)readBuf[5];
@@ -480,12 +394,14 @@ bool RMDMotor::GetPI() {
     _piParam.speedKi = (uint8_t)readBuf[8];
     _piParam.torqueKp = (uint8_t)readBuf[9];
     _piParam.torqueKi = (uint8_t)readBuf[10];
-
-    return true;
 }
 
-// 改写PI参数----------------------------------------
-bool RMDMotor::WriteAnglePI(const uint8_t *arrPI) {
+/**
+ * @brief 改写电机PI
+ *
+ * @param arrPI 数组取前四位，分别是位置PI、速度PI，该型号电机无扭矩PI
+ */
+void RMDMotor::WriteAnglePI(const uint8_t *arrPI) {
     uint8_t command[12] = {0x3E, 0x32, 0x00, 0x06, 0x00};
     command[2] = _id;
     command[4] = GetHeaderCheckSum(command);
@@ -498,17 +414,17 @@ bool RMDMotor::WriteAnglePI(const uint8_t *arrPI) {
     command[11] = checksum;
 
     if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
-        ERROR_("WriteAnglePI: Failed to send command to device");
-        return false;
+        throw RobotException(ErrorCode::SerialSendError, "In RMDMotor::WriteAnglePI, ");
     }
-    if (!GetPI()) {
-        ERROR_("Failed to updata PI param");
-    }
-    return true;
+    GetPI();
 }
 
-// 调试PI参数-------------------------------------------
-bool RMDMotor::DebugAnglePI(const uint8_t *arrPI) {
+/**
+ * @brief 临时写入电机PI，断电失效，用于调试
+ *
+ * @param arrPI 数组取前四位，分别是位置PI、速度PI，该型号电机无扭矩PI
+ */
+void RMDMotor::DebugAnglePI(const uint8_t *arrPI) {
     uint8_t command[12] = {0x3E, 0x31, 0x00, 0x06, 0x00};
     command[2] = _id;
     command[4] = GetHeaderCheckSum(command);
@@ -520,13 +436,9 @@ bool RMDMotor::DebugAnglePI(const uint8_t *arrPI) {
     command[11] = checksum;
 
     if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
-        ERROR_("DebugAnglePI: Failed to send command to device");
-        return false;
+        throw RobotException(ErrorCode::SerialSendError, "In RMDMotor::DebugAnglePI, ");
     }
-    if (!GetPI()) {
-        ERROR_("Failed to updata PI param");
-    }
-    return true;
+    GetPI();
 }
 
 /**

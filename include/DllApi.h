@@ -1,5 +1,4 @@
 #include "D5Robot.h"
-#include "ErrorCode.h"
 #include "RobotException.hpp"
 
 #ifdef D5R_EXPORTS
@@ -19,9 +18,10 @@ D5R_API ErrorCode CreateD5RobotInstance2(D5Robot *&instance,
                                          uint8_t bottomRMDID,
                                          const char *upCameraID);
 D5R_API ErrorCode DestroyD5RobotInstance(D5Robot *instance);
-D5R_API bool CallIsInit(D5Robot *instance);
 D5R_API ErrorCode CallSetZero(D5Robot *instance);
 D5R_API ErrorCode CallStop(D5Robot *instance);
 D5R_API ErrorCode CallJointsMoveAbsolute(D5Robot *instance, const Joints j);
 D5R_API ErrorCode CallJointsMoveRelative(D5Robot *instance, const Joints j);
+D5R_API ErrorCode CallTaskMoveAbsolute(D5Robot *instance, const TaskSpace ts);
+D5R_API ErrorCode CallTaskMoveRelative(D5Robot *instance, const TaskSpace ts);
 }

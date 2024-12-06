@@ -86,8 +86,8 @@ class KineHelper {
         double py = currentSpace.Py;
         double pz = currentSpace.Pz;
 
-        djs.R1 = dRz;
-        djs.R5 = -dRy;
+        djs.R1 = dRz * 180.0 / pi;
+        djs.R5 = -dRy * 180.0 / pi;
         djs.P2 = Sind(rz) * dPx - Cosd(rz) * dPy + (px * Cosd(rz) + py * Sind(rz)) * dRz;
         djs.P3 = Cosd(rz) * dPx + Sind(rz) * dPy + (-px * Sind(rz) + py * Cosd(rz)) * dRz + (ltx * Sind(ry) + ltz * Cosd(ry)) * dRy;
         djs.P4 = -dPz + (ltx * Cosd(ry) - ltz * Sind(ry)) * (-dRy);

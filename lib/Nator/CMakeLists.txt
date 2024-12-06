@@ -8,18 +8,16 @@ set(CMAKE_C_STANDARD_REQUIRED True)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-
-
 add_library(NTSDK SHARED IMPORTED)
 
 set_target_properties(NTSDK PROPERTIES
-IMPORTED_IMPLIB "${PROJECT_SOURCE_DIR}/SDK/lib64/NTControl.lib"
+    IMPORTED_IMPLIB "${PROJECT_SOURCE_DIR}/SDK/lib64/NTControl.lib"
 )
 
 set_target_properties(NTSDK PROPERTIES
-IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/SDK/lib64/NTControl.dll"
+    IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/SDK/lib64/NTControl.dll"
 )
 
 add_library(NatorMotor NatorMotor.cpp)
 target_link_libraries(NatorMotor NTSDK)
-target_include_directories(NatorMotor PUBLIC "../../include")
+target_include_directories(NatorMotor PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/SDK/include" "${CMAKE_SOURCE_DIR}/global")
