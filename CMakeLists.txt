@@ -31,19 +31,23 @@ target_link_libraries(D5Robot PUBLIC NatorMotor)
 target_link_libraries(D5Robot PUBLIC CameraUp)
 
 # 导出 DllAPI
-add_library(D5RbotApi SHARED src/DllApi.cpp)
-target_include_directories(D5RbotApi PUBLIC "${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include")
-target_link_libraries(D5RbotApi D5Robot)
-target_compile_definitions(D5RbotApi PUBLIC "D5R_EXPORTS")
+add_library(D5RobotApi SHARED src/DllApi.cpp)
+target_include_directories(D5RobotApi PUBLIC "${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include")
+target_link_libraries(D5RobotApi D5Robot)
+target_compile_definitions(D5RobotApi PUBLIC "D5R_EXPORTS")
 
 # 测试程序
 add_executable(test test.cpp)
 target_link_libraries(test D5Robot)
-target_link_libraries(test D5RbotApi)
+target_link_libraries(test D5RobotApi)
 
 add_executable(TestKineHelper "test/TestKineHelper.cpp")
 target_include_directories(TestKineHelper PUBLIC "${PROJECT_SOURCE_DIR}/include")
 target_link_libraries(TestKineHelper D5Robot)
+
+add_executable(TestDll "test/TestDll.cpp")
+target_include_directories(TestDll PUBLIC "${PROJECT_SOURCE_DIR}/include")
+target_link_libraries(TestDll D5RobotApi)
 
 add_executable(Match "test/Match.cpp")
 target_include_directories(Match PUBLIC "${PROJECT_SOURCE_DIR}/include")
