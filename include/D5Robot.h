@@ -5,12 +5,6 @@
 #include "SerialPort.h"
 #include "RobotException.hpp"
 
-#ifdef D5R_EXPORTS
-#define D5R_API __declspec(dllexport)
-#else
-#define D5R_API __declspec(dllimport)
-#endif
-
 namespace D5R {
 
 struct Joints {
@@ -21,7 +15,7 @@ struct Joints {
   int r5;
 };
 
-class D5R_API D5Robot {
+class D5Robot {
 public:
   D5Robot(const char *serialPort, std::string natorID, uint8_t topRMDID,
           uint8_t botRMDID);

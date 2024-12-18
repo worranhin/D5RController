@@ -13,7 +13,7 @@ void TestApi();
 
 int main() {
   // TestMoving();
-  // TestApi();
+  TestApi();
   // TestKineHelper();
 
   return 0;

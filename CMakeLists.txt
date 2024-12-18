@@ -10,14 +10,20 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_subdirectory(lib/RMD)
 add_subdirectory(lib/Nator)
-add_library(D5Robot SHARED src/D5Robot.cpp src/DllApi.cpp)
+
+add_library(D5Robot "src/D5Robot.cpp")
 target_include_directories(D5Robot PUBLIC "${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include" "${PROJECT_SOURCE_DIR}/lib/RMD" "${PROJECT_SOURCE_DIR}/lib/Nator")
 target_link_libraries(D5Robot PUBLIC RMDMotor)
 target_link_libraries(D5Robot PUBLIC NatorMotor)
-target_compile_definitions(D5Robot PUBLIC "D5R_EXPORTS")
 
-add_executable(test test.cpp)
-target_link_libraries(test D5Robot)
+# 下面将 Cpp Class 转写为动态库
+add_library(D5RobotDll SHARED "src/D5RobotDll.cpp")
+target_include_directories(D5RobotDll PUBLIC "${PROJECT_SOURCE_DIR}/include")
+target_link_libraries(D5RobotDll PUBLIC D5Robot)
+target_compile_definitions(D5RobotDll PUBLIC "D5R_EXPORTS")
+
+# add_executable(test test.cpp)
+# target_link_libraries(test D5Robot)
 
 
 
