@@ -33,10 +33,10 @@ target_link_libraries(D5Robot PUBLIC NatorMotor)
 target_link_libraries(D5Robot PUBLIC Camera)
 
 # 导出 DllAPI
-add_library(D5RbotApi SHARED src/DllApi.cpp)
-target_include_directories(D5RbotApi PUBLIC "${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include")
-target_link_libraries(D5RbotApi D5Robot)
-target_compile_definitions(D5RbotApi PUBLIC "D5R_EXPORTS")
+add_library(D5RobotDll SHARED src/DllApi.cpp)
+target_include_directories(D5RobotDll PUBLIC "${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include")
+target_link_libraries(D5RobotDll D5Robot)
+target_compile_definitions(D5RobotDll PUBLIC "D5R_EXPORTS")
 
 # 测试程序
 add_executable(test test.cpp)
