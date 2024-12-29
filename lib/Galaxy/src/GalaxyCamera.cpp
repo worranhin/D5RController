@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file GalaxyCamera.cpp
  * @author worranhin (worranhin@foxmail.com)
  * @author drawal (2581478521@qq.com)

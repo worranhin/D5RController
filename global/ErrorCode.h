@@ -4,6 +4,7 @@ namespace D5R {
 
 enum ErrorCode {
     OK = 0,
+    UnimplementError,
     SystemError = 100,
     CreateInstanceError = 101,
     DestroyInstanceError_nullptr,
@@ -32,6 +33,8 @@ enum ErrorCode {
     D5RCameraNotInitialized,
     CameraError = 600,
     CameraInitError,
-    CameraReadError
+    CameraReadError,
+    DllError = 700,
+    DllCalledWithNullPtr
 };
 }

@@ -33,15 +33,19 @@ target_link_libraries(D5Robot PUBLIC NatorMotor)
 target_link_libraries(D5Robot PUBLIC Camera)
 
 # 导出 DllAPI
-add_library(D5RobotDll SHARED src/DllApi.cpp)
-target_include_directories(D5RobotDll PUBLIC "${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include")
-target_link_libraries(D5RobotDll D5Robot)
-target_compile_definitions(D5RobotDll PUBLIC "D5R_EXPORTS")
+add_library(D5RAPI SHARED src/DllApi.cpp)
+target_include_directories(D5RAPI PUBLIC "${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include")
+target_link_libraries(D5RAPI D5Robot)
+target_compile_definitions(D5RAPI PUBLIC "D5R_EXPORTS")
 
 # 测试程序
 add_executable(test test.cpp)
 target_link_libraries(test D5Robot)
-target_link_libraries(test D5RbotApi)
+target_link_libraries(test D5RAPI)
+add_custom_command(TARGET test POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy -t $<TARGET_FILE_DIR:test> $<TARGET_RUNTIME_DLLS:test>
+  COMMAND_EXPAND_LISTS
+)
 
 add_executable(TestKineHelper "test/TestKineHelper.cpp")
 target_include_directories(TestKineHelper PUBLIC "${PROJECT_SOURCE_DIR}/include")

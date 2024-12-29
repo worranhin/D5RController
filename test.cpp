@@ -107,7 +107,7 @@ int main() {
 
     cv::Mat img_bot;
     count = 0;
-    while (robot.botCamera->Read(img_bot)) {
+    while (robot.botCamera && robot.botCamera->Read(img_bot)) {
         // cv::line(img_bot, cv::Point(100, 1700), cv::Point(1800, 1700), cv::Scalar(255), 2);
 
         cv::imshow(winname, img_bot);
