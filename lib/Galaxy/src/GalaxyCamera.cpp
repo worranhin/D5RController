@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file GalaxyCamera.cpp
  * @author worranhin (worranhin@foxmail.com)
  * @author drawal (2581478521@qq.com)
@@ -178,6 +178,9 @@ bool GxCamera::Retrieve(cv::OutputArray image) {
  * @return false
  */
 bool GxCamera::Read(cv::OutputArray image) {
+    if (_handle == nullptr) {
+        return false;
+    }
     GXSendCommand(_handle, GX_COMMAND_TRIGGER_SOFTWARE); // 发送软触发命令
 
     auto status = GXGetImage(_handle, &_data, 1000);
