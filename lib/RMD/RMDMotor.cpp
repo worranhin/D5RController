@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file RMDController.cpp
  * @author worranhin (worranhin@foxmail.com)
  * @author drawal (2581478521@qq.com)
@@ -26,14 +26,15 @@ namespace D5R {
  * parameters of the motor. If the serial port is invalid, the constructor
  * will print an error message and set the _isInit flag to false.
  */
-RMDMotor::RMDMotor(const char *serialPort, uint8_t id)
-    : _serialPort(serialPort), _id(id) {
-  _isInit = Init();
-  GetPI();
-  if (!_isInit) {
-    ERROR_("Fail to init RMDMotor");
-  }
-}
+// RMDMotor::RMDMotor(const char *serialPort, uint8_t id)
+//     : _serialPortName(serialPort), _id(id) {
+//       throw RobotException(ErrorCode::NotImplementException);
+//   // _isInit = Init();
+//   // GetPI();
+//   // if (!_isInit) {
+//   //   ERROR_("Fail to init RMDMotor");
+//   // }
+// }
 
 /**
  * Construct a RMDMotor object using a handle to a serial port.
@@ -45,9 +46,30 @@ RMDMotor::RMDMotor(const char *serialPort, uint8_t id)
  * should ensure that the serial port is valid and the handle is a valid
  * handle to the serial port.
  */
-RMDMotor::RMDMotor(HANDLE comHandle, uint8_t id) : _handle(comHandle), _id(id) {
-  GetPI();
-  _isInit = true;
+// RMDMotor::RMDMotor(HANDLE comHandle, uint8_t id) : _handle(comHandle), _id(id) {
+//   throw RobotException(ErrorCode::NotImplementException);
+//   // GetPI();
+//   // _isInit = true;
+// }
+
+/**
+ * Construct a RMDMotor object using a SerialPort pointer.
+ *
+ * @param serial Pointer to a SerialPort object.
+ * @param id The ID of the motor.
+ *
+ * The constructor initializes the motor by obtaining the handle from the
+ * SerialPort and setting the initialization flag. If the handle is invalid,
+ * it throws a RobotException with RMDInitError.
+ */
+RMDMotor::RMDMotor(D5R::SerialPort& serial, uint8_t id): _serial(serial), _id(id) {
+  HANDLE _handle = _serial.GetHandle();
+  if(_handle != NULL) {
+    _isInit = true;
+  } else {
+    _isInit = false;
+    throw RobotException(ErrorCode::RMDInitError);
+  }
 }
 
 /**
@@ -58,61 +80,61 @@ RMDMotor::RMDMotor(HANDLE comHandle, uint8_t id) : _handle(comHandle), _id(id) {
 RMDMotor::~RMDMotor() {}
 
 // 句柄初始化-----------------------------------------
-bool RMDMotor::Init() {
-  _handle = CreateFileA(_serialPort, GENERIC_READ | GENERIC_WRITE, 0, 0,
-                        OPEN_EXISTING, 0, 0);
-  if (_handle == INVALID_HANDLE_VALUE) {
-    ERROR_("Invalid serialport");
-    return false;
-  }
+// bool RMDMotor::Init() {
+//   _handle = CreateFileA(_serialPortName, GENERIC_READ | GENERIC_WRITE, 0, 0,
+//                         OPEN_EXISTING, 0, 0);
+//   if (_handle == INVALID_HANDLE_VALUE) {
+//     ERROR_("Invalid serialport");
+//     return false;
+//   }
 
-  BOOL bSuccess = SetupComm(_handle, 100, 100);
-  if (!bSuccess) {
-    ERROR_("Failed to init serial device buffer");
-    return false;
-  }
+//   BOOL bSuccess = SetupComm(_handle, 100, 100);
+//   if (!bSuccess) {
+//     ERROR_("Failed to init serial device buffer");
+//     return false;
+//   }
 
-  COMMTIMEOUTS commTimeouts = {0};
-  commTimeouts.ReadIntervalTimeout = 50;         // 读取时间间隔超时
-  commTimeouts.ReadTotalTimeoutConstant = 100;   // 总读取超时
-  commTimeouts.ReadTotalTimeoutMultiplier = 10;  // 读取超时乘数
-  commTimeouts.WriteTotalTimeoutConstant = 100;  // 总写入超时
-  commTimeouts.WriteTotalTimeoutMultiplier = 10; // 写入超时乘数
+//   COMMTIMEOUTS commTimeouts = {0};
+//   commTimeouts.ReadIntervalTimeout = 50;         // 读取时间间隔超时
+//   commTimeouts.ReadTotalTimeoutConstant = 100;   // 总读取超时
+//   commTimeouts.ReadTotalTimeoutMultiplier = 10;  // 读取超时乘数
+//   commTimeouts.WriteTotalTimeoutConstant = 100;  // 总写入超时
+//   commTimeouts.WriteTotalTimeoutMultiplier = 10; // 写入超时乘数
 
-  bSuccess = SetCommTimeouts(_handle, &commTimeouts);
-  if (!bSuccess) {
-    ERROR_("Failed to config Timeouts value");
-    return false;
-  }
+//   bSuccess = SetCommTimeouts(_handle, &commTimeouts);
+//   if (!bSuccess) {
+//     ERROR_("Failed to config Timeouts value");
+//     return false;
+//   }
 
-  DCB dcbSerialParams = {0};
-  dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
-  if (!GetCommState(_handle, &dcbSerialParams)) {
-    ERROR_("Failed to obtain device comm status");
-    return false;
-  }
-  dcbSerialParams.BaudRate = CBR_115200;
-  dcbSerialParams.ByteSize = 8;
-  dcbSerialParams.StopBits = ONESTOPBIT;
-  dcbSerialParams.Parity = NOPARITY;
-  if (!SetCommState(_handle, &dcbSerialParams)) {
-    ERROR_("Failed to config DCB");
-    return false;
-  }
+//   DCB dcbSerialParams = {0};
+//   dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
+//   if (!GetCommState(_handle, &dcbSerialParams)) {
+//     ERROR_("Failed to obtain device comm status");
+//     return false;
+//   }
+//   dcbSerialParams.BaudRate = CBR_115200;
+//   dcbSerialParams.ByteSize = 8;
+//   dcbSerialParams.StopBits = ONESTOPBIT;
+//   dcbSerialParams.Parity = NOPARITY;
+//   if (!SetCommState(_handle, &dcbSerialParams)) {
+//     ERROR_("Failed to config DCB");
+//     return false;
+//   }
 
-  return true;
-}
+//   return true;
+// }
 
 // 是否初始化-----------------------------------------
 bool RMDMotor::isInit() { return _isInit; }
 
 // 设备重连------------------------------------------
-bool RMDMotor::Reconnect() {
-  if (_handle != nullptr) {
-    CloseHandle(_handle);
-  }
-  return Init();
-}
+// bool RMDMotor::Reconnect() {
+//   if (_handle != nullptr) {
+//     CloseHandle(_handle);
+//   }
+//   return Init();
+// }
 
 // 获取当前角度---------------------------------------
 bool RMDMotor::GetMultiAngle_s(int64_t *angle) {
@@ -123,21 +145,25 @@ bool RMDMotor::GetMultiAngle_s(int64_t *angle) {
   uint8_t readBuf[bytesToRead];
   int64_t motorAngle = 0;
 
-  if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
-    ERROR_("GetMultiAngle_s: Failed to send command to device");
+  if (!_serial.writeAndRead(command, sizeof(command), readBuf, bytesToRead)) {
     return false;
   }
 
-  if (!ReadFile(_handle, readBuf, bytesToRead, &_bytesRead, NULL)) {
-    ERROR_("GetMultiAngle_s: Failed to revice data from device");
-    return false;
-  }
+  // if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
+  //   ERROR_("GetMultiAngle_s: Failed to send command to device");
+  //   return false;
+  // }
 
-  // check received length
-  if (_bytesRead != bytesToRead) {
-    ERROR_("GetMultiAngle_s: Abnormal received data - byte count");
-    return false;
-  }
+  // if (!ReadFile(_handle, readBuf, bytesToRead, &_bytesRead, NULL)) {
+  //   ERROR_("GetMultiAngle_s: Failed to revice data from device");
+  //   return false;
+  // }
+
+  // // check received length
+  // if (_bytesRead != bytesToRead) {
+  //   ERROR_("GetMultiAngle_s: Abnormal received data - byte count");
+  //   return false;
+  // }
 
   // check received format
   if (readBuf[0] != 0x3E || readBuf[1] != 0x92 || readBuf[2] != _id ||
@@ -179,18 +205,22 @@ uint16_t RMDMotor::GetSingleAngle_s() {
   const DWORD bytesToRead = 8;
   uint8_t readBuf[bytesToRead];
 
-  if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
+  if (!_serial.writeAndRead(command, sizeof(command), readBuf, bytesToRead)) {
     throw RobotException(ErrorCode::SerialSendError);
   }
 
-  if (!ReadFile(_handle, readBuf, bytesToRead, &_bytesRead, NULL)) {
-    throw RobotException(ErrorCode::SerialReceiveError);
-  }
+  // if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
+  //   throw RobotException(ErrorCode::SerialSendError);
+  // }
 
-  // check received length
-  if (_bytesRead != bytesToRead) {
-    throw RobotException(ErrorCode::SerialReceiveError_LessThanExpected);
-  }
+  // if (!ReadFile(_handle, readBuf, bytesToRead, &_bytesRead, NULL)) {
+  //   throw RobotException(ErrorCode::SerialReceiveError);
+  // }
+
+  // // check received length
+  // if (_bytesRead != bytesToRead) {
+  //   throw RobotException(ErrorCode::SerialReceiveError_LessThanExpected);
+  // }
 
   // check received format
   if (readBuf[0] != 0x3E || readBuf[1] != 0x94 || readBuf[2] != _id ||
@@ -244,11 +274,17 @@ bool RMDMotor::GoAngleAbsolute(int64_t angle) {
   }
   command[13] = checksum;
 
-  if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
-    ERROR_("GoToAngle: Failed to send command to device");
+  if (_serial.write(command, sizeof(command)) == sizeof(command)) {
+    return true;
+  } else {
     return false;
   }
-  return true;
+
+  // if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
+  //   ERROR_("GoToAngle: Failed to send command to device");
+  //   return false;
+  // }
+  // return true;
 }
 
 // 旋转角度-相对--------------------------------------
@@ -270,11 +306,17 @@ bool RMDMotor::GoAngleRelative(int64_t angle) {
   }
   command[9] = checksum;
 
-  if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
-    ERROR_("GoToAngle_R: Failed to send command to device");
+  if (_serial.write(command, sizeof(command)) == sizeof(command)) {
+    return true;
+  } else {
     return false;
   }
-  return true;
+
+  // if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
+  //   ERROR_("GoToAngle_R: Failed to send command to device");
+  //   return false;
+  // }
+  // return true;
 }
 
 // 急停----------------------------------------------
@@ -282,11 +324,17 @@ bool RMDMotor::Stop() {
   uint8_t command[] = {0x3E, 0x81, 0x00, 0x00, 0x00};
   command[2] = _id;
   command[4] = GetHeaderCheckSum(command);
-  if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
-    ERROR_("Stop: Failed to send command to device");
+
+  if (_serial.write(command, sizeof(command)) == sizeof(command)) {
+    return true;
+  } else {
     return false;
   }
-  return true;
+  // if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
+  //   ERROR_("Stop: Failed to send command to device");
+  //   return false;
+  // }
+  // return true;
 }
 
 // 将当前位置设置为电机零点-----------------------------
@@ -295,11 +343,17 @@ bool RMDMotor::SetZero() {
   uint8_t command[] = {0x3E, 0x19, 0x00, 0x00, 0x00};
   command[2] = _id;
   command[4] = GetHeaderCheckSum(command);
-  if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
-    ERROR_("SetZero: Failed to send command to device");
+
+  if (_serial.write(command, sizeof(command)) == sizeof(command)) {
+    return true;
+  } else {
     return false;
   }
-  return true;
+  // if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
+  //   ERROR_("SetZero: Failed to send command to device");
+  //   return false;
+  // }
+  // return true;
 }
 
 // 获取PI参数-----------------------------------------
@@ -310,23 +364,28 @@ bool RMDMotor::GetPI() {
   const DWORD bytesToRead = 12;
   uint8_t readBuf[bytesToRead];
 
-  if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
-    ERROR_("GetPI: Failed to send command to device");
+  if (!_serial.writeAndRead(command, sizeof(command), readBuf, bytesToRead)) {
+    // return false;
     throw RobotException(ErrorCode::SerialSendError);
-    return false;
   }
 
-  if (!ReadFile(_handle, readBuf, bytesToRead, &_bytesRead, NULL)) {
-    ERROR_("GetPI: Failed to revice data from device");
-    throw RobotException(ErrorCode::SerialReceiveError);
-    return false;
-  }
+  // if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
+  //   ERROR_("GetPI: Failed to send command to device");
+  //   throw RobotException(ErrorCode::SerialSendError);
+  //   return false;
+  // }
 
-  if (_bytesRead != bytesToRead) {
-    ERROR_("GetPI: Abnormal received data - byte count");
-    throw RobotException(ErrorCode::RMDGetPIError);
-    return false;
-  }
+  // if (!ReadFile(_handle, readBuf, bytesToRead, &_bytesRead, NULL)) {
+  //   ERROR_("GetPI: Failed to revice data from device");
+  //   throw RobotException(ErrorCode::SerialReceiveError);
+  //   return false;
+  // }
+
+  // if (_bytesRead != bytesToRead) {
+  //   ERROR_("GetPI: Abnormal received data - byte count");
+  //   throw RobotException(ErrorCode::RMDGetPIError);
+  //   return false;
+  // }
 
   if (readBuf[0] != 0x3E || readBuf[1] != 0x30 || readBuf[2] != _id ||
       readBuf[3] != 0x06 || readBuf[4] != (0x3E + 0x30 + _id + 0x06)) {
@@ -368,14 +427,20 @@ bool RMDMotor::WriteAnglePI(const uint8_t *arrPI) {
   }
   command[11] = checksum;
 
-  if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
-    ERROR_("WriteAnglePI: Failed to send command to device");
+  if (_serial.write(command, sizeof(command))) {
+    return true;
+  } else {
     return false;
   }
-  if (!GetPI()) {
-    ERROR_("Failed to updata PI param");
-  }
-  return true;
+
+  // if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
+  //   ERROR_("WriteAnglePI: Failed to send command to device");
+  //   return false;
+  // }
+  // if (!GetPI()) {
+  //   ERROR_("Failed to updata PI param");
+  // }
+  // return true;
 }
 
 // 调试PI参数-------------------------------------------
@@ -390,14 +455,20 @@ bool RMDMotor::DebugAnglePI(const uint8_t *arrPI) {
   }
   command[11] = checksum;
 
-  if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
-    ERROR_("DebugAnglePI: Failed to send command to device");
+  if (_serial.write(command, sizeof(command))) {
+    return true;
+  } else {
     return false;
   }
-  if (!GetPI()) {
-    ERROR_("Failed to updata PI param");
-  }
-  return true;
+
+  // if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
+  //   ERROR_("DebugAnglePI: Failed to send command to device");
+  //   return false;
+  // }
+  // if (!GetPI()) {
+  //   ERROR_("Failed to updata PI param");
+  // }
+  // return true;
 }
 
 /**

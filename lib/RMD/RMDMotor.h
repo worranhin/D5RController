@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <iostream>
 #include <thread>
+#include "SerialPort.h"
 
 namespace D5R {
 
@@ -32,8 +33,9 @@ enum ID_ENTRY {
 };
 class RMDMotor {
 public:
-  RMDMotor(const char *serialPort, uint8_t id);
-  RMDMotor(HANDLE comHandle, uint8_t id);
+  // RMDMotor(const char *serialPort, uint8_t id);
+  // RMDMotor(HANDLE comHandle, uint8_t id);
+  RMDMotor(D5R::SerialPort& serial, uint8_t id);
   ~RMDMotor();
   bool Init();
   bool isInit();
@@ -52,9 +54,10 @@ public:
   PIPARAM _piParam;
 
 private:
-  const char *_serialPort;
+  // const char *_serialPortName;
+  SerialPort& _serial;
   uint8_t _id;
-  HANDLE _handle;
+  // HANDLE _handle;
   DWORD _bytesRead;
   DWORD _bytesWritten;
   bool _isInit;
