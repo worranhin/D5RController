@@ -22,8 +22,9 @@ target_include_directories(D5RobotDll PUBLIC "${PROJECT_SOURCE_DIR}/include")
 target_link_libraries(D5RobotDll PUBLIC D5Robot)
 target_compile_definitions(D5RobotDll PUBLIC "D5R_EXPORTS")
 
-# add_executable(test test.cpp)
-# target_link_libraries(test D5Robot)
+add_executable(test test.cpp)
+target_link_libraries(test D5Robot)
+target_link_libraries(test D5RobotDll)
 
 
 

@@ -1,11 +1,12 @@
 #include "D5Robot.h"
-#include "DllApi.h"
+#include "D5RobotDll.h"
 #include "KineHelper.hpp"
 #include "RobotException.hpp"
 
 D5R::D5Robot *pRobot;
 const std::string port = "\\\\.\\COM14";
-const std::string natorID = "usb:id:7547982319";
+// const std::string natorID = "usb:id:7547982319";
+const std::string natorID = "usb:id:2250716012";
 
 int TestMoving();
 void TestKineHelper();
@@ -38,9 +39,13 @@ int TestMoving() {
 }
 
 void TestApi() {
+  using namespace D5R;
   D5R::ErrorCode ec;
-  ec = CreateD5RobotInstance(pRobot, port.c_str(), natorID.c_str(), 1, 2);
-  std::cout << ec << std::endl;
+  // ec = CreateD5RobotInstance(pRobot, port.c_str(), natorID.c_str(), 1, 2);
+  D5R::D5Robot* pRobot =
+      CreateD5RobotInstance("\\\\.\\COM16", natorID.c_str(), 1, 2);
+
+  // std::cout << ec << std::endl;
   // pRobot = CreateD5RobotInstance2(port.c_str(), natorID.c_str(), 1, 2);
   // CallJointsMoveAbsolute(pRobot, {0, -13000000, 0, 0, 0});
   ec = CallJointsMoveRelative(pRobot, {-1000, 1000000, 2000000, 3000000, 1000});

@@ -2,8 +2,8 @@
 #include "LogUtil.h"
 #include "NatorMotor.h"
 #include "RMDMotor.h"
-#include "SerialPort.h"
 #include "RobotException.hpp"
+#include "SerialPort.h"
 
 namespace D5R {
 
@@ -24,6 +24,10 @@ struct Pose {
 };
 
 class D5Robot {
+private:
+  SerialPort _port;
+  bool _isInit;
+
 public:
   NatorMotor natorMotor;
   RMDMotor topRMDMotor;
@@ -39,9 +43,5 @@ public:
   bool JointsMoveRelative(const Joints j);
   Joints GetCurrentJoint();
   Pose GetCurrentPose();
-
-private:
-  SerialPort _port;
-  bool _isInit;
 };
 } // namespace D5R

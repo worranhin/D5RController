@@ -2,10 +2,6 @@
 #include <comdef.h>
 #include <comutil.h>
 
-#define MAJOR_VERSION 0
-#define MINOR_VERSION 1
-#define PATCH_VERSION 0
-
 #define TRY_BLOCK(content)                                                     \
   try {                                                                        \
     content return ErrorCode::OK;                                              \
