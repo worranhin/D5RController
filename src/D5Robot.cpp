@@ -4,8 +4,8 @@ namespace D5R {
 D5Robot::D5Robot(const char *serialPort, std::string natorID, uint8_t topRMDID,
                  uint8_t botRMDID)
     : _port(serialPort), natorMotor(natorID),
-      topRMDMotor(_port.GetHandle(), topRMDID),
-      botRMDMotor(_port.GetHandle(), botRMDID) {
+      topRMDMotor(std::ref(_port), topRMDID),
+      botRMDMotor(std::ref(_port), botRMDID) {
   _isInit = natorMotor.IsInit() && topRMDMotor.isInit() && botRMDMotor.isInit();
   if (!_isInit) {
     throw RobotException(ErrorCode::CreateInstanceError);
