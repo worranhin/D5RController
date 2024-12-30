@@ -4,6 +4,7 @@ namespace D5R {
 
 enum ErrorCode {
   OK = 0,
+  NotImplementException,
   SystemError = 100,
   CreateInstanceError = 101,
   DestroyInstanceError_nullptr,

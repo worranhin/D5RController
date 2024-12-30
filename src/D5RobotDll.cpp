@@ -69,9 +69,16 @@ ErrorCode CallJointsMoveRelative(D5Robot *instance, const Joints j) {
   TRY_BLOCK(instance->JointsMoveRelative(j);)
 }
 
-ErrorCode D5R_GetLastError() {
-  return lastError.code;
+ErrorCode CallGetCurrentJoint(D5Robot *instance, Joints &j) {
+  try {
+    j = instance->GetCurrentJoint();
+    return ErrorCode::OK;
+  } catch (const RobotException& exc) {
+    return exc.code;
+  }
 }
+
+ErrorCode D5R_GetLastError() { return lastError.code; }
 
 BSTR D5R_GetVersion() {
   static std::string version = std::to_string(MAJOR_VERSION) + "." +
