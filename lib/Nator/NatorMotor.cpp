@@ -144,23 +144,31 @@ void NatorMotor::WaitUtilPositioned() {
 
 // 相对移动---------------------------------------------
 bool NatorMotor::GoToPoint_R(NTU_Point p) {
-  auto res = NT_OK;
-  res = NT_GotoPositionRelative_S(_handle, NTU_AXIS_X, p.x, 0);
-  if (res != NT_OK) {
-    std::cerr << "Failed to move axis_x, error status: " << res << std::endl;
-    return false;
+  NT_STATUS res = NT_OK;
+  if (p.x != 0) {
+    res = NT_GotoPositionRelative_S(_handle, NTU_AXIS_X, p.x, 0);
+    if (res != NT_OK) {
+      std::cerr << "Failed to move axis_x, error status: " << res << std::endl;
+      return false;
+    }
   }
-  res = NT_GotoPositionRelative_S(_handle, NTU_AXIS_Y, p.y, 0);
-  if (res != NT_OK) {
-    std::cerr << "Failed to move axis_y, error status: " << res << std::endl;
-    return false;
+
+  if (p.y != 0) {
+    res = NT_GotoPositionRelative_S(_handle, NTU_AXIS_Y, p.y, 0);
+    if (res != NT_OK) {
+      std::cerr << "Failed to move axis_y, error status: " << res << std::endl;
+      return false;
+    }
   }
-  res = NT_GotoPositionRelative_S(_handle, NTU_AXIS_Z, p.z, 0);
-  if (res != NT_OK) {
-    std::cerr << "Failed to move axis_z, error status: " << res << std::endl;
-    return false;
+
+  if (p.z != 0) {
+    res = NT_GotoPositionRelative_S(_handle, NTU_AXIS_Z, p.z, 0);
+    if (res != NT_OK) {
+      std::cerr << "Failed to move axis_z, error status: " << res << std::endl;
+      return false;
+    }
   }
-  //   WaitUtilPositioned();
+  
   return true;
 }
 
