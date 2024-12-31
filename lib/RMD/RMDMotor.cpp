@@ -305,6 +305,10 @@ bool RMDMotor::GoAngleAbsolute(int64_t angle) {
 
 // 旋转角度-相对--------------------------------------
 bool RMDMotor::GoAngleRelative(int64_t angle) {
+  if (angle == 0) {
+    return true;
+  }
+
   int64_t deltaAngle = angle;
   uint8_t checksum = 0;
   const unsigned int bytesToRead = 13;

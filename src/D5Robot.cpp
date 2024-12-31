@@ -67,7 +67,7 @@ bool D5Robot::JointsMoveRelative(const Joints j) {
   if (!natorMotor.GoToPoint_R(p)) {
     ERROR_("Failed to move nator motor");
     return false;
-  }
+  }  
   if (!topRMDMotor.GoAngleRelative(j.r1)) {
     ERROR_("Failed to move top RMD motor");
     return false;
