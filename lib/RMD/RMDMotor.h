@@ -10,11 +10,12 @@
  *
  */
 #pragma once
+#include "SerialPort.h"
 #include <Windows.h>
 #include <cstdint>
 #include <iostream>
+#include <mutex>
 #include <thread>
-#include "SerialPort.h"
 
 namespace D5R {
 
@@ -32,10 +33,28 @@ enum ID_ENTRY {
   ID_02 = (uint8_t)0x02,
 };
 class RMDMotor {
+
+public:
+  PIPARAM _piParam;
+  int8_t temperature;
+  int16_t power;
+  int16_t speed;
+  uint16_t encoderValue; // 0~16383
+
+private:
+  // const char *_serialPortName;
+  SerialPort &_serial;
+  uint8_t _id;
+  // HANDLE _handle;
+  DWORD _bytesRead;
+  DWORD _bytesWritten;
+  bool _isInit;
+  std::mutex _dataMutex;
+
 public:
   // RMDMotor(const char *serialPort, uint8_t id);
   // RMDMotor(HANDLE comHandle, uint8_t id);
-  RMDMotor(D5R::SerialPort& serial, uint8_t id);
+  RMDMotor(D5R::SerialPort &serial, uint8_t id);
   ~RMDMotor();
   bool Init();
   bool isInit();
@@ -51,17 +70,9 @@ public:
   bool WriteAnglePI(const uint8_t *arrPI);
   bool DebugAnglePI(const uint8_t *arrPI);
 
-  PIPARAM _piParam;
-
 private:
-  // const char *_serialPortName;
-  SerialPort& _serial;
-  uint8_t _id;
-  // HANDLE _handle;
-  DWORD _bytesRead;
-  DWORD _bytesWritten;
-  bool _isInit;
   uint8_t _checksum(uint8_t nums[], int start, int end);
+  bool checkFormat(uint8_t *rxBuffer, uint8_t command, uint8_t dataLen);
 };
 
 } // namespace D5R

@@ -46,7 +46,8 @@ namespace D5R {
  * should ensure that the serial port is valid and the handle is a valid
  * handle to the serial port.
  */
-// RMDMotor::RMDMotor(HANDLE comHandle, uint8_t id) : _handle(comHandle), _id(id) {
+// RMDMotor::RMDMotor(HANDLE comHandle, uint8_t id) : _handle(comHandle),
+// _id(id) {
 //   throw RobotException(ErrorCode::NotImplementException);
 //   // GetPI();
 //   // _isInit = true;
@@ -62,9 +63,10 @@ namespace D5R {
  * SerialPort and setting the initialization flag. If the handle is invalid,
  * it throws a RobotException with RMDInitError.
  */
-RMDMotor::RMDMotor(D5R::SerialPort& serial, uint8_t id): _serial(serial), _id(id) {
+RMDMotor::RMDMotor(D5R::SerialPort &serial, uint8_t id)
+    : _serial(serial), _id(id) {
   HANDLE _handle = _serial.GetHandle();
-  if(_handle != NULL) {
+  if (_handle != NULL) {
     _isInit = true;
   } else {
     _isInit = false;
@@ -253,6 +255,8 @@ uint8_t RMDMotor::GetHeaderCheckSum(uint8_t *command) {
 bool RMDMotor::GoAngleAbsolute(int64_t angle) {
   int64_t angleControl = angle;
   uint8_t checksum = 0;
+  const unsigned int bytesToRead = 13;
+  uint8_t rxBuffer[bytesToRead];
 
   uint8_t command[] = {0x3E, 0xA3, 0x00, 0x08, 0x00, 0xA0, 0x0F,
                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xAF};
@@ -274,23 +278,37 @@ bool RMDMotor::GoAngleAbsolute(int64_t angle) {
   }
   command[13] = checksum;
 
-  if (_serial.write(command, sizeof(command)) == sizeof(command)) {
-    return true;
-  } else {
-    return false;
+  if (!_serial.writeAndRead(command, sizeof(command), rxBuffer, bytesToRead)) {
+    throw RobotException(ErrorCode::SerialSendError);
   }
 
-  // if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
-  //   ERROR_("GoToAngle: Failed to send command to device");
+  if (!checkFormat(rxBuffer, 0xA3, 0x07)) {
+    throw RobotException(ErrorCode::RMDFormatError);
+  }
+
+  *(uint8_t *)(&temperature) = rxBuffer[5];
+  *(uint8_t *)(&power) = rxBuffer[6];
+  *((uint8_t *)(&power) + 1) = rxBuffer[7];
+  *(uint8_t *)(&speed) = rxBuffer[8];
+  *((uint8_t *)(&speed) + 1) = rxBuffer[9];
+  *(uint8_t *)(&encoderValue) = rxBuffer[10];
+  *((uint8_t *)(&encoderValue) + 1) = rxBuffer[11];
+
+  return true;
+
+  // if (_serial.write(command, sizeof(command)) == sizeof(command)) {
+  //   return true;
+  // } else {
   //   return false;
   // }
-  // return true;
 }
 
 // 旋转角度-相对--------------------------------------
 bool RMDMotor::GoAngleRelative(int64_t angle) {
   int64_t deltaAngle = angle;
   uint8_t checksum = 0;
+  const unsigned int bytesToRead = 13;
+  uint8_t rxBuffer[bytesToRead];
 
   static uint8_t command[10] = {0x3E, 0xA7, 0x00, 0x04, 0x00, 0x00};
   command[2] = _id;
@@ -306,17 +324,31 @@ bool RMDMotor::GoAngleRelative(int64_t angle) {
   }
   command[9] = checksum;
 
-  if (_serial.write(command, sizeof(command)) == sizeof(command)) {
-    return true;
-  } else {
-    return false;
+  if (!_serial.writeAndRead(command, sizeof(command), rxBuffer, bytesToRead)) {
+    throw RobotException(ErrorCode::SerialSendError);
   }
 
-  // if (!WriteFile(_handle, command, sizeof(command), &_bytesWritten, NULL)) {
-  //   ERROR_("GoToAngle_R: Failed to send command to device");
+  // 检查帧头
+  if (!checkFormat(rxBuffer, 0xA7, 0x07)) {
+    throw RobotException(ErrorCode::RMDFormatError);
+  }
+
+  std::lock_guard<std::mutex> lock(_dataMutex);
+  *(uint8_t *)(&temperature) = rxBuffer[5];
+  *(uint8_t *)(&power) = rxBuffer[6];
+  *((uint8_t *)(&power) + 1) = rxBuffer[7];
+  *(uint8_t *)(&speed) = rxBuffer[8];
+  *((uint8_t *)(&speed) + 1) = rxBuffer[9];
+  *(uint8_t *)(&encoderValue) = rxBuffer[10];
+  *((uint8_t *)(&encoderValue) + 1) = rxBuffer[11];
+
+  return true;
+
+  // if (_serial.write(command, sizeof(command)) == sizeof(command)) {
+  //   return true;
+  // } else {
   //   return false;
   // }
-  // return true;
 }
 
 // 急停----------------------------------------------
@@ -485,6 +517,25 @@ uint8_t RMDMotor::_checksum(uint8_t nums[], int start, int end) {
   }
 
   return sum;
+}
+
+/**
+ * \brief Check if the received data matches the given command and data length
+ * \param rxBuffer The received data
+ * \param command The command to check
+ * \param dataLen The length of the datafield to check
+ * \return true if the received data matches, false otherwise
+ */
+bool RMDMotor::checkFormat(uint8_t *rxBuffer, uint8_t command, uint8_t dataLen) {
+  bool result = true;
+  result = result && (rxBuffer[0] == 0x3E);
+  result = result && (rxBuffer[1] == command);
+  result = result && (rxBuffer[2] == _id);
+  result = result && (rxBuffer[3] == dataLen);
+  result = result && (rxBuffer[4] == _checksum(rxBuffer, 0, 4));
+  if (dataLen > 0)
+    result = result && (rxBuffer[dataLen + 5] == _checksum(rxBuffer, 5, dataLen + 5));
+  return result;
 }
 
 } // namespace D5R
